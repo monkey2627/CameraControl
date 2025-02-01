@@ -98,7 +98,7 @@ public class Connect2Python : MonoBehaviour{
         test = test + 1;
         if(flag == 0)
         {
-            float[] ans = new float[stw.size * stw.size];
+            float[] ans = new float[stw.sampleSolveSize * stw.sampleSolveSize];
             //将response的内容一个个填入ans数组中
 
             //

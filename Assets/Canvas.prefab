@@ -404,7 +404,6 @@ GameObject:
   - component: {fileID: 2921475205557221508}
   - component: {fileID: 2921475205557221530}
   - component: {fileID: 2921475205557221509}
-  - component: {fileID: 2921475205557221531}
   - component: {fileID: 2921475205557221528}
   m_Layer: 5
   m_Name: StartPoints
@@ -474,18 +473,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2921475205557221531
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2921475205557221511}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4a8890669eb041458c91e0ac77141dd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &2921475205557221528
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3638,7 +3625,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2921475206652444770}
   - component: {fileID: 2921475206652444769}
-  - component: {fileID: 2921475206652444771}
   - component: {fileID: 2921475206652444774}
   - component: {fileID: 2921475206652444775}
   m_Layer: 5
@@ -3690,19 +3676,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2921475206652444781}
   m_CullTransparentMesh: 1
---- !u!114 &2921475206652444771
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2921475206652444781}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1dd3e2322c9ad1e479ee68485752c8a0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  navigationCamera: {fileID: 0}
 --- !u!114 &2921475206652444774
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3988,7 +3961,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2921475206652444771}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: NavigationMap, Assembly-CSharp
         m_MethodName: Enable
         m_Mode: 1

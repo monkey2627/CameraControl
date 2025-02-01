@@ -16,8 +16,8 @@ public class goToTargetPlace : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        mapCamera = GameObject.Find("MapCamera");
-        stw = GameObject.Find("Manager").GetComponent<sampleThroughWay>();
+        mapCamera = GameObject.Find("mapCamera");
+        stw = GameObject.Find("Main-Manager").GetComponent<sampleThroughWay>();
         cameraSize = (int) mapCamera.GetComponent<Camera>().orthographicSize;
         center.transform.position = new Vector3(-cameraSize, center.transform.position.y, -cameraSize);
         fixHeight = gameObject.transform.parent.parent.GetComponent<RectTransform>().rect.height;
@@ -29,7 +29,7 @@ public class goToTargetPlace : MonoBehaviour
     {
         
     }
-    public void go()
+    public void Go()
     {
         //以左下角为0，0
         float x = fixWidth / 2 + transform.localPosition.x;
@@ -40,11 +40,11 @@ public class goToTargetPlace : MonoBehaviour
         camera.transform.position = new Vector3(new_x,stw.tall ,new_z);
         
         //将起始点作为路径的第一个关键点
-        stw.wayRecorder.Add(camera.transform.position);
+        stw.Add2WayRecorder(camera.transform.position);
 
         stw.lastAngel = camera.transform.rotation;
         //设置相机的位置为起始点，然后开始采样
-        stw.setCenterAndStartSampling(camera.gameObject);
+        stw.GenerateWay();
 
     }
 }

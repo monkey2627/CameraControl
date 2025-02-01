@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class SamplePointsGenerater : MonoBehaviour
-{
-    //格子个数,每行几个，每列几个
+{ }
+/*    //格子个数,每行几个，每列几个
     public int heightNum = 10;
     public int widthNum = 10;
     public static int number = 30;
@@ -177,7 +177,7 @@ public class SamplePointsGenerater : MonoBehaviour
         return flag;
     }
     #endregion
-    int size = 4;
+    int sampleSolveSize = 4;
     public void generateAllSamplePoints()
     {
         int num = 0;
@@ -222,13 +222,13 @@ public class SamplePointsGenerater : MonoBehaviour
 
                     /*
                     //当没有处理过的图达到一定的数量，集中处理，并得到每个图的评分
-                    if(unsolvedSprite.Count >= size * size)
+                    if(unsolvedSprite.Count >= sampleSolveSize * sampleSolveSize)
                     {
-                        viewManager.getMultipleView(size, unsolvedSprite);
+                        viewManager.getMultipleView(sampleSolveSize, unsolvedSprite);
                         //得到图之后传给llm然后得到评分再保存
                         //send
                         List<forPicture> t = new List<forPicture>();
-                        for(int z = 0; z < size * size; z++)
+                        for(int z = 0; z < sampleSolveSize * sampleSolveSize; z++)
                         {
                             t.Add(unsolvedSprite[0]);
                             unsolvedSprite.RemoveAt(0);
@@ -239,7 +239,7 @@ public class SamplePointsGenerater : MonoBehaviour
                         connect.SendFrame();
                     }
                     
-                    */
+                    
                 }
             }
         }
@@ -429,7 +429,7 @@ public class SamplePointsGenerater : MonoBehaviour
     {
 
     }
-}
+}*/
    
 
 

@@ -7,12 +7,13 @@ using UnityEngine;
 public class GetCourseWay : MonoBehaviour
 {
     public GameObject exhibits;
-	public List<Point> getOrder()
+	public List<Point> GetOrder()
     {
         Ga ga = new Ga();
 		double[,] Mat = new double[exhibits.transform.childCount, exhibits.transform.childCount];   //定义二维数组
 		for (int i = 0; i < exhibits.transform.childCount; i++)
 		{
+			Debug.Log(exhibits.transform.GetChild(i).name);
 			for (int j = 0; j < exhibits.transform.childCount; j++)
 			{
 				Mat[i, j] = (exhibits.transform.GetChild(i).transform.position - exhibits.transform.GetChild(j).transform.position).magnitude;
@@ -26,25 +27,58 @@ public class GetCourseWay : MonoBehaviour
 
 		//得到遍历藏品的粗糙路径,从0开始，大小为exhibits.transform.childCount
 		int[] order = ga.GaTsp(Mat,exhibits.transform.childCount);
+		Debug.Log("get order");
+		string tt = "";
+        foreach (var item in order)
+        {
+			tt += item.ToString()+" ";
+        }
+		Debug.Log(tt);
 		//根据遍历顺序，用Astar算法得到路径
 		GameObject begin = exhibits.transform.GetChild(order[0]).gameObject;
-		Vector2 last = new Vector2(begin.transform.position.x, begin.transform.position.z);
+		Vector2 last = new(begin.transform.position.x, begin.transform.position.z);
 		//存粗糙回路上所有的关键点
 		List<Point> points = new List<Point>();
 		List<Point> thisPoints;
+		Point start;
+		Point end;
+		Vector2 next;
 		for (int c = 1; c < order.Length; c++)
 		{
 			GameObject t = exhibits.transform.GetChild(order[c]).gameObject;
-			Vector2 next = new Vector2(t.transform.position.x, t.transform.position.z);
-			thisPoints = Astar.instance.FindPath(last, next);
+			Debug.Log("第"+c.ToString()+"个孩子的名字为"+ t.name);
+			next = new(t.transform.position.x, t.transform.position.z);
+			start = Astar.instance.GetIdem(last);
+            if (start.isObstacle)
+            {
+				start = Astar.instance.chooseOnePoint(start);
+            }
+			end = Astar.instance.GetIdem(next);
+            if (end.isObstacle)
+            {
+				end = Astar.instance.chooseOnePoint(end);
+            }
+			thisPoints = Astar.instance.FindPath(start, end);
 			foreach (Point p in thisPoints)
             {
 				points.Add(p);
+				Debug.Log(p.x + "_" + p.y);
             }
 			last = next;
 		}
+		start = Astar.instance.GetIdem(last);
+		if (start.isObstacle)
+		{
+			start = Astar.instance.chooseOnePoint(start);
+		}
+		next = new Vector2(begin.transform.position.x, begin.transform.position.z);
+		end = Astar.instance.GetIdem(next);
+		if (end.isObstacle)
+		{
+			end = Astar.instance.chooseOnePoint(end);
+		}
 		//尾巴到起点，形成一个回路
-		thisPoints =  Astar.instance.FindPath(last, new Vector2(begin.transform.position.x, begin.transform.position.z));
+		thisPoints =  Astar.instance.FindPath(start, end);
 		foreach (Point p in thisPoints)
 		{
 			points.Add(p);
@@ -448,11 +482,11 @@ class Ga
 			subpath = minfloyd.GetPath(Individual[Length - 1], Individual[0]).Remove(0, 6);
 		}
 		path += subpath;
-		return getRightOrder(path,count) ;
+		return GetRightOrder(path,count) ;
 	}
-	public int[] getRightOrder(string path,int count)
+	public int[] GetRightOrder(string path,int count)
 	{
-		int[] ans = new int[count];
+		int[] ans = new int[count+1];
 		int begin = 0;
 		for (int i = 0; i < path.Length; i++)
 		{
@@ -481,7 +515,7 @@ class Ga
 					i++;
 				}
 				ans[num++] = t;
-				Debug.Log(t);
+				//Debug.Log(t);
 			}
 		}
 		for (int i = 0; i < begin; i++)

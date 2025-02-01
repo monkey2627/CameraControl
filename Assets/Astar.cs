@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class Astar : MonoBehaviour
 {
+    public Material way;
+    public Material choosed;
     public static Astar instance;
     public GameObject keyPoints;
     public  int mapWidth;//地图的长
@@ -31,6 +33,7 @@ public class Astar : MonoBehaviour
         maxDistance = 120;
     }
     //初始化grid
+    //地板红色，障碍物黄色，门灰色
     public void InitGrid(float cameraSize)
     {
         int grid_x_grid = (int) (cameraSize * 2.0f / lengthOfBox);
@@ -252,11 +255,14 @@ public class Astar : MonoBehaviour
     /// 二叉堆添加
     /// </summary>
     /// <param name="openList"></param>
+    /// 
     /// <param name="point"></param>
     private void AddPoint(List<Point> openList, Point point)
     {
         openList.Add(point);
-        point.plane.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/green")) as Material;
+        //
+        //
+        //point.plane.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/green")) as Material;
         int last = openList.Count - 1;
         while (last >= 1)
         {
@@ -294,32 +300,20 @@ public class Astar : MonoBehaviour
         }
         openList.Remove(openList[head - 1]);
     }
-    public void FindAllPath()
-    {
-        GameObject begin = keyPoints.transform.GetChild(0).gameObject;
-        Vector2 last = new Vector2(begin.transform.position.x,begin.transform.position.z);
-
-        for (int c = 1; c < keyPoints.transform.childCount; c++)
-        {
-            GameObject t = keyPoints.transform.GetChild(c).gameObject;
-            Vector2 next = new Vector2(t.transform.position.x, t.transform.position.z);
-            FindPath(last,next);
-            last = next;
-        }
-    }
+  
     /// <summary>
     /// 查找最优路径
     /// </summary>
     /// <param name="start">起点</param>
     /// <param name="end">终点</param>
-    public List<Point> FindPath(Vector2 startPos, Vector2 endPos)
+    public List<Point> FindPath(Point start, Point end)
     {
-        Point start = GetIdem(startPos);
-        Point end = GetIdem(endPos);
+        //Point start = GetIdem(startPos);
+        //Point end = GetIdem(endPos);
         Debug.Log("起点算法坐标"+start.x + "+" + start.y);
-        Debug.Log("终点算法坐标"+end.x + "+" + end.y);
-        List<Point> openList = new List<Point>();
-        List<Point> closeList = new List<Point>();
+        Debug.Log("终点算法坐标"+end.x + "+" + end.y+" ");
+        List<Point> openList = new();
+        List<Point> closeList = new();
         AddPoint(openList, start);//将起始位置添加到Open列表，二叉堆
 
         //终点在路面上的情况
@@ -329,20 +323,24 @@ public class Astar : MonoBehaviour
             Point point = openList[0];//获取开启列表中F值最小的格子，
             if (point == end)
             {
-                //用记录的父子关系来生成队列
+                
+                //用记录的父子关系来生成队列，变色
                 return Generatepath(start, end);
             }
             //移除point
             RemovePoint(openList, point);
             closeList.Add(point);
             //四周节点列表
-            //节点四周的八个方向都可以走
+            //节点四周的八个方向都可以
+            ，改，现在的问题是，每开始一个新的start和end，其有可能会走之前走过的路，是完全消除吗？
             List<Point> surroundPoints = GetSurroundPoints(point);
             //去除周围节点中已经被排除的
             PointsFilter(surroundPoints, closeList);
 
             foreach (Point surroundPoint in surroundPoints)
             {
+                //被放进周围列表中的变成绿色
+                surroundPoint.plane.GetComponent<MeshRenderer>().material = choosed;
                 if (openList.IndexOf(surroundPoint) > -1)//如果周围节点在起始列表中
                 {
                     /*
@@ -400,11 +398,8 @@ public class Astar : MonoBehaviour
     /// <returns></returns>
     public Point GetIdem(Vector2 pos)
     {
-
         int i = Mathf.RoundToInt((pos.x - meshOrigin.position.x) / lengthOfBox);
         int j = Mathf.RoundToInt((pos.y - meshOrigin.position.z) / lengthOfBox);
-        i = Mathf.Clamp(i, 0, mapWidth - 1);
-        j = Mathf.Clamp(j, 0, mapHeight - 1);
         return map[i, j];
     }
     public  bool isFloorAndNotObtacle(Vector2 pos)
@@ -417,6 +412,77 @@ public class Astar : MonoBehaviour
         }
             return false;
 
+    }
+    public Point chooseOnePoint(Point point)
+    {
+        //八个方向都可以走
+        Point up = null, down = null, left = null, right = null, lu = null, ru = null, ld = null, rd = null;
+        if (point.y < mapHeight - 1)
+        {
+            up = map[point.x, point.y + 1];
+        }
+        if (point.y > 0)
+        {
+            down = map[point.x, point.y - 1];
+        }
+        if (point.x > 0)
+        {
+            left = map[point.x - 1, point.y];
+        }
+        if (point.x < mapWidth - 1)
+        {
+            right = map[point.x + 1, point.y];
+        }
+        if (up != null && left != null)
+        {
+            lu = map[point.x - 1, point.y + 1];
+        }
+        if (up != null && right != null)
+        {
+            ru = map[point.x + 1, point.y + 1];
+        }
+        if (down != null && left != null)
+        {
+            ld = map[point.x - 1, point.y - 1];
+        }
+        if (down != null && right != null)
+        {
+            rd = map[point.x + 1, point.y - 1];
+        }
+        List<Point> list = new List<Point>();
+        if (down != null && down.isObstacle == false && down.isValid == true)
+        {
+            return down;
+        }
+        if (left != null && left.isObstacle == false && left.isValid == true)
+        {
+            return left;
+        }
+        if (right != null && right.isObstacle == false && right.isValid == true)
+        {
+            return right;
+        }
+        if (up != null && up.isObstacle == false && up.isValid == true)
+        {
+            return up;
+        }
+        if (lu != null && lu.isObstacle == false && left.isObstacle == false && up.isObstacle == false && lu.isValid == true && left.isValid == true && up.isValid == true)
+        {
+            return lu;
+        }
+        if (ld != null && ld.isObstacle == false && left.isObstacle == false && down.isObstacle == false && left.isValid == true && down.isValid == true && ld.isValid == true)
+        {
+            return ld;
+        }
+        if (ru != null && ru.isObstacle == false && right.isObstacle == false && up.isObstacle == false && ru.isValid == true && right.isValid == true && up.isValid == true)
+        {
+            return ru;
+        }
+        if (rd != null && rd.isObstacle == false && right.isObstacle == false && down.isObstacle == false && rd.isValid == true && right.isValid == true && down.isValid == true)
+        {
+            return rd;
+        }
+        return null;
     }
     /// <summary>
     /// 获取当前节点周围的八个节点
@@ -557,7 +623,7 @@ public class Astar : MonoBehaviour
             Point node = end;//从终点开始生成路线
             while (node != start)
             {
-                node.plane.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/pink")) as Material;
+                node.plane.GetComponent<MeshRenderer>().material = way;
                 path.Add(node);//将节点放入路径队列中
                 node = node.parent;//下一个节点为该节点的父节点
             }
