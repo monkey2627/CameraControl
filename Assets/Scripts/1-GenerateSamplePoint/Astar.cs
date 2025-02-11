@@ -332,7 +332,7 @@ public class Astar : MonoBehaviour
             closeList.Add(point);
             //四周节点列表
             //节点四周的八个方向都可以
-            ，改，现在的问题是，每开始一个新的start和end，其有可能会走之前走过的路，是完全消除吗？
+           // ，改，现在的问题是，每开始一个新的start和end，其有可能会走之前走过的路，是完全消除吗？
             List<Point> surroundPoints = GetSurroundPoints(point);
             //去除周围节点中已经被排除的
             PointsFilter(surroundPoints, closeList);

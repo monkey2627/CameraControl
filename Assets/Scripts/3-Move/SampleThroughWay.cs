@@ -4,45 +4,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
  //这个类用来沿着粗糙路径生成采样点
-public class sampleThroughWay : MonoBehaviour
-{   
-    private GetCourseWay gcw;
+public class SampleThroughWay : MonoBehaviour
+{
+    public static SampleThroughWay instance;
     private readonly int sampleNum = 5;
-    private readonly List<Point> coarseWayKeyPoints = new();
+    private readonly List<Point> sampleCenters = new();
     private static readonly System.Random ra = new System.Random(unchecked((int)DateTime.Now.Ticks));
-    void Start()
+    void Awake()
     {
-        
-        
-
-       
-
+        instance = this;
     }
     public void GetMap()
     {
         //初始化地图，在整个界面上画格子,得到Map[Point]
         Astar.instance.InitGrid((int)mapCamera.GetComponent<Camera>().orthographicSize);
+        Debug.Log("Finish Init Map");
     }
-    public void GetCourseWay()
+    public void GenerateSampleCenters()
     {
-        //用遗传算法得到初始地图,返回粗糙回路上所有的路径点
-        List<Point> points =  gcw.GetOrder();
-        //根据粗糙路径点
-        GetWayKeyPoints(points);
+        //根据TSP问题的遗传算法，根据所有的展览物的位置生成一个访问回路（访问顺序-getcourseway）
+        //然后根据得到的访问顺序、场景环境信息，用Astar算法生成粗糙路径上所有关键点
+        List<Point> points =  GetCourseWay.instance.GetOrderAndWayPoints();   
+        Debug.Log("get course way");
+        //根据粗糙路径点再画格子，每个关键点代表一个格子，修改map[x,y]属于的采样格子标记(label)
+        GetSampleCenters(points);
+     
     }
     public void Init()
     {
-            gcw = gameObject.GetComponent<GetCourseWay>();
             fatherForBag = GameObject.Find("fatherForCell");
             mainCamera = GameObject.Find("Main Camera");
             cameraOnUI = GameObject.Find("peopleUI"); ;//在UI上代表移动中的摄像机的圆点
-            connect = gameObject.GetComponent<Connect2Python>();
-            moveThroughWay = gameObject.GetComponent<MoveThroughWay>();
             for (int i = 0; i < 6; i++)
             {
                 quaternions.Add(Quaternion.Euler(0, 360 / 6 * i, 0));
             }
-            StartCoroutine("GenerateNextCenter");
+            //StartCoroutine("GenerateNextCenter");
             //采样点对应ui
             leftDown = GameObject.Find("leftDown");
             mapCamera = GameObject.Find("mapCamera");
@@ -50,7 +47,6 @@ public class sampleThroughWay : MonoBehaviour
             dl = navigationMap.GetComponent<drawline>();
             sampleCamera = GameObject.Find("sampleCamera");
 }   
-    private Connect2Python connect;
     public List<SamplePointBunch> spbl = new();
     private GameObject sampleCamera;//用来采样的相机
     public List<Quaternion> quaternions = new();  //相机的旋转角度
@@ -60,8 +56,8 @@ public class sampleThroughWay : MonoBehaviour
     public int sampleSolveSize;
     int sampleHalfNum = 2;//bunch由中心格子和其周围一圈格子组成
     
-    //根据粗糙路径点得到采样需要的wayKeyPoints
-    public void GetWayKeyPoints(List<Point> points)
+    //根据粗糙路径点得到采样需要的采样中心
+    public void GetSampleCenters(List<Point> points)
     {
         int label = 0;
         //将粗糙路径沿固定格子数扩大
@@ -69,11 +65,11 @@ public class sampleThroughWay : MonoBehaviour
         {
             if (Astar.instance.map[points[i].x, points[i].y].samplePointBunchLabel == label - 1 || Astar.instance.map[points[i].x, points[i].y].samplePointBunchLabel!=-2)
             {
-                //已经有标号的就跳过
+                //已经有标号的就跳过，表明当前这个点已经属于某个采样集合了
                 continue;
             }
-            //当前的中心作为采样点的中心，加入集合中
-            coarseWayKeyPoints.Add(points[i]);
+            //当前的中心作为采样点的中心，加入集合中，代表一个新的采样集合中心
+            sampleCenters.Add(points[i]);
             //正方形范围内都是这个bunch,在这个bunch内随机选K个格子生成采样点
             for(int j = -sampleHalfNum; j <= sampleHalfNum; j++)
             {
@@ -91,7 +87,7 @@ public class sampleThroughWay : MonoBehaviour
     }
     public void GetSamplePointsThroughWay()
     {
-        foreach (Point point in coarseWayKeyPoints){
+        foreach (Point point in sampleCenters){
             //格子左下角
             Vector2 pos = point.worldpos;
             //创建一个新的采样点集合
@@ -131,7 +127,6 @@ public class sampleThroughWay : MonoBehaviour
                         samplePoint.passed = false;
                         
                         unsolvedSprite.Add(new ForPicture() {bunch = spbl.Count, samplePoint = bunch.spl.Count, view = v});
-                        //allSamplePoints[i, j, k].views.Add(new View() { score = 0, rot = quaternions[v] });
                         samplePoint.views.Add(new View() {valid = true, score = 0, texture = ViewManager.CaptureCameraForTexture(sampleCamera.GetComponent<Camera>()), rot = quaternions[v] });
                     }
                     //将当前这个samplePoint加入当前的bunch中
@@ -151,8 +146,9 @@ public class sampleThroughWay : MonoBehaviour
                     }
                     //将这次处理的所有图片的坐标信息存在 t 中，存入forscore
                     forScore.Add(t);
-                    //将生成的总图片发给服务器端
-                    connect.SendFrame();
+                    //如果连接没问题，将生成的总图片发给服务器端
+                    if(Connect2Python.instance.connected)
+                        Connect2Python.instance.SendFrame();
                 }
                 k++;
             }
@@ -196,8 +192,7 @@ public class sampleThroughWay : MonoBehaviour
 
         }
     }
-    #region 初始化完成后开始生成路径
-    private MoveThroughWay moveThroughWay;
+#region 初始化完成后开始生成路径
     public Quaternion lastAngel;//记录上一个相机的位姿
     private List<Vector3> wayRecorder = new(); //记录选择过的key路径，为了曲线生成
     public void Add2WayRecorder(Vector3 v)
@@ -343,6 +338,30 @@ public class sampleThroughWay : MonoBehaviour
             }
             k++;
         }
+
+        //根据生成的路径，得到平滑点，进行平滑移动
+        while (finalWay.Count > 0)
+        {
+
+            Vector3 next = finalWay[0].point.pos;
+            Quaternion nextAngel = finalWay[0].quaternion;
+            finalWay[0].point.label.GetComponent<CustomUI.CircularImage>().color = Color.blue;
+
+            ShowSprite(finalWay[0].point.views[finalWay[0].view].texture);
+
+            finalWay.RemoveAt(0);
+            //将当前选择的位置加入队列中
+            wayRecorder.Add(next);
+            if (wayRecorder.Count >= 3)
+            {
+                MoveThroughWay.instance.GetWayPointsBetween(wayRecorder[wayRecorder.Count - 2], next, wayRecorder[wayRecorder.Count - 3], next + new Vector3(19, 1, 671), lastAngel, nextAngel);
+            }
+            else if (wayRecorder.Count == 2)//此时只选了一个关键点
+            {
+                MoveThroughWay.instance.GetWayPointsBetween(wayRecorder[wayRecorder.Count - 2], next, wayRecorder[wayRecorder.Count - 2] - new Vector3(-20, 0, 20), next + new Vector3(19, 1, 671), lastAngel, nextAngel);
+            }
+
+        }
     }    
     private GameObject fatherForBag;
     private void ShowSprite(Texture2D texture)
@@ -443,6 +462,7 @@ public class sampleThroughWay : MonoBehaviour
 
     //根据选出来的路径以及现在走到哪了生成路径，以及对用户反馈作出反应
     public bool userResponse;
+    /*
     IEnumerator GenerateNextCenter()
     {//.选中了才显示sprite，会快一点
         while (true)
@@ -478,7 +498,7 @@ public class sampleThroughWay : MonoBehaviour
             yield return new WaitForSeconds(1);
         }
 
-    }
+    }*/
     #endregion
    
 

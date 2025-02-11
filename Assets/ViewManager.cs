@@ -9,13 +9,13 @@ public class ViewManager : MonoBehaviour
 {   
     static int num1 = 0;
     public  Quaternion[] quaternion = new Quaternion[4];
-    private static sampleThroughWay stw;
+    private static SampleThroughWay stw;
     // Start is called before the first frame update
     void Start()
     {
         num1 = 0;
         //testCamera = GameObject.Find("SampleCamera");
-        stw = gameObject.GetComponent<sampleThroughWay>();
+        stw = gameObject.GetComponent<SampleThroughWay>();
     }
     
     //得到num x num个view组成的一整张图片保存下来，每个图片分别生成texture存到相应的结构体中

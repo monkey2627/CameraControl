@@ -1,28 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading;
 using System.Net.Sockets;
 using System.IO;
 using System.Text;
-using UnityEngine.Video;
 using System;
 using System.Linq;
 
 public class Connect2Python : MonoBehaviour{
     
-    public string serverIP ;
-    public int serverPort;
+    private string serverIP ;
+    private int serverPort;
     public DataObject readDataObject;
     TcpClient client;
     NetworkStream stream;// 网络流，用于和服务器通信  
-    bool connected;    
+    public bool connected;    
     public List<string> responseList;
     public int responseListCount;
     public GameObject voiceRecorder;
-    private sampleThroughWay stw;
-    void Start(){
-        
+    public static Connect2Python instance;
+    private void Awake()
+    {
+        instance = this;
     }
     public void Init()
     {
@@ -32,7 +31,6 @@ public class Connect2Python : MonoBehaviour{
         responseListCount = 0;
         readDataObject = new DataObject();
         responseList = new List<string>();
-        stw = gameObject.GetComponent<sampleThroughWay>();
     }    
     public void Connect2server(){
         client = new TcpClient(serverIP, serverPort);//tell client server's inf,和服务器端建立连接
@@ -98,21 +96,21 @@ public class Connect2Python : MonoBehaviour{
         test = test + 1;
         if(flag == 0)
         {
-            float[] ans = new float[stw.sampleSolveSize * stw.sampleSolveSize];
+            float[] ans = new float[SampleThroughWay.instance.sampleSolveSize * SampleThroughWay.instance.sampleSolveSize];
             //将response的内容一个个填入ans数组中
 
             //
-            if (stw!=null && stw.forScore.Count > 0)
+            if (SampleThroughWay.instance!=null && SampleThroughWay.instance.forScore.Count > 0)
             {
                 int i = 0;
-                foreach (ForPicture t in stw.forScore[0])
+                foreach (ForPicture t in SampleThroughWay.instance.forScore[0])
                 {
 
-                    var element = stw.spbl[t.bunch].spl[t.samplePoint].views[t.view];
+                    var element = SampleThroughWay.instance.spbl[t.bunch].spl[t.samplePoint].views[t.view];
                     element.score = ans[i++];
-                    stw.spbl[t.bunch].spl[t.samplePoint].views[t.view] = element;
+                    SampleThroughWay.instance.spbl[t.bunch].spl[t.samplePoint].views[t.view] = element;
                 }
-                stw.forScore.RemoveAt(0); 
+                SampleThroughWay.instance.forScore.RemoveAt(0); 
             }
         }
         //再次调用，解决粘包问题

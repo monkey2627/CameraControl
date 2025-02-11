@@ -7,6 +7,7 @@ using UnityEngine;
 public class Voice : MonoBehaviour
 {
     //进行音频压缩 https://zhuanlan.zhihu.com/p/139347299
+    public static Voice instance;
     private AudioSource audioSource;//声音播放组件
     // 当前使用的麦克风名字
     private string microphoneName;
@@ -17,9 +18,12 @@ public class Voice : MonoBehaviour
     private bool isRecord = false;
     //
     private AudioClip micRecord;
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
+        instance = this;
+    }
+    private void Start()
+    {        
         // 获取麦克风列表
         micDevicesNames = Microphone.devices;
         if (micDevicesNames.Length <= 0){
@@ -33,11 +37,6 @@ public class Voice : MonoBehaviour
         // 获取播放声音的组件
         audioSource = GetComponent<AudioSource>();
         
-        BeginRecord();
-    }
-    public void BeginRecord()
-    {
-        //采样率是指，每秒由几个float记录,与python同步
         if (!isRecord)
         {
             micRecord = Microphone.Start(microphoneName, true, 60 * 10, 16000);//44100音频采样率   固定格
@@ -49,14 +48,14 @@ public class Voice : MonoBehaviour
             Debug.Log("已经启动录音功能了");
         }
 
-    }  
+    }
+    // Start is called before the first frame update
     public bool voiceClipPrepared = false;
     public byte[] sendVoiceData;
     public float minLevel = 1;
     public bool saveRecord = false;
-    private int beginPos;
+    private int beginPos = 0;
     private bool isRecording = false;
-    private int last = 0;
     private bool saved = false;
     private List<byte[]> audioList = new List<byte[]>();
     public float quiet = 0;
@@ -86,7 +85,7 @@ public class Voice : MonoBehaviour
         if (v < minVolumn && quiet > 2f && isRecording && !saveRecord && !saved){
             Debug.Log("结束记录" + Microphone.GetPosition(microphoneName));
             saveRecord = true;
-        }
+        } /**/
    
     }
     //用协程来进行录制
@@ -99,16 +98,17 @@ public class Voice : MonoBehaviour
         {
             if (saveRecord)
             {
-                //getPosition  获取在录制样本中的位置。
+                //getPosition  获取在录制样本中现在的位置。
                 int now = Microphone.GetPosition(microphoneName);
                 int offset = now - beginPos;
                 // 录音的长度乘以它的通道
                 float[] soundata = new float[offset * 1];
-                // 使用剪辑中的数据填充数组，后者是offset
-                micRecord.GetData(soundata, last);
-                byte[] outData = new byte[soundata.Length * 2];
+                // 使用剪辑中的数据填充数组，后者是开始读取的位置
+                micRecord.GetData(soundata, beginPos);
+               
                 // 遍历所有采集到的音频信息
-                // short类型储存在最大值
+                byte[] outData = new byte[soundata.Length * 2];
+                // short类型储存在最大值 
                 int rescaleFactor = 32767;
                 for (int i = 0; i < soundata.Length; i++)
                 {
@@ -124,10 +124,10 @@ public class Voice : MonoBehaviour
                 saved = true;
                 audioList.Add(outData);
                 //保存每一次的录音在本地
+                Connected2Baidu.instance.Recognition(outData);
                 SaveRecord(outData,soundata);
                 //直到saveRecord 为真才开启下一次协程
-                //保存前半段
-                
+           
             }
             yield return new WaitForEndOfFrame();
         }
@@ -142,39 +142,11 @@ public class Voice : MonoBehaviour
         {
             fs.Write(data, 0, data.Length);
             WriteHeader(fs, micRecord); //wav文件头
-        } /*/*/
-        // byte[] data= GetRealAudio(ref micRecord,start,end);
-        // StopCoroutine("RecordAudioIENU");
-        // Microphone.End(microphoneName);
+        } 
         audioSource.clip = AudioClip.Create(micRecord.name,data.Length,
         micRecord.channels, micRecord.frequency, false);
         audioSource.clip.SetData(soundData,0);
         audioSource.Play();
-    }
-    public static byte[] GetRealAudio(ref AudioClip recordedClip,int start ,int end)
-    {
-        int position = Microphone.GetPosition(null);
-        /*   if (position <= 0 || position > recordedClip.samples)
-        {
-            position = recordedClip.samples;
-        }*/
-        float[] soundata = new float[(end-start) * 1];
-        recordedClip.GetData(soundata, 0);
-        recordedClip = AudioClip.Create(recordedClip.name, position,
-        recordedClip.channels, recordedClip.frequency, false);
-        recordedClip.SetData(soundata, 0);
-        // short类型储存在最大值
-        int rescaleFactor = 32767;
-        byte[] outData = new byte[soundata.Length * 2];
-        for (int i = 0; i < soundata.Length; i++)
-        {
-            short temshort = (short)(soundata[i] * rescaleFactor);
-            byte[] temdata = BitConverter.GetBytes(temshort);
-            outData[i * 2] = temdata[0];
-            outData[i * 2 + 1] = temdata[1];
-        }
-        //Debug.Log("position=" + position + "  outData.leng=" + outData.Length);
-        return outData;
     }
     /// <summary>获取麦克风音量</summary>
     /// <returns>麦克风的音量数值</returns>
@@ -207,6 +179,7 @@ public class Voice : MonoBehaviour
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="clip"></param>
+    # region 工具方法
     public static void WriteHeader(FileStream stream, AudioClip clip)
     {
         int hz = clip.frequency;
@@ -274,4 +247,5 @@ public class Voice : MonoBehaviour
 
         return fileStream;
     }
+    #endregion
 }

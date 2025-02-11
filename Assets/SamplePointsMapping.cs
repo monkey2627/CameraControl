@@ -14,7 +14,7 @@ public class SamplePointsMapping : MonoBehaviour
     {
         GameObject[] startPoints = new GameObject[1000];
     }
-    public void enableAdd()
+    public void EnableAdd()
     {
         add = true;
     }

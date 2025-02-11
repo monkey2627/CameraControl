@@ -6,8 +6,13 @@ using UnityEngine;
 
 public class GetCourseWay : MonoBehaviour
 {
+	public static GetCourseWay instance;
     public GameObject exhibits;
-	public List<Point> GetOrder()
+    private void Awake()
+    {
+		instance = this;
+    }
+    public List<Point> GetOrderAndWayPoints()
     {
         Ga ga = new Ga();
 		double[,] Mat = new double[exhibits.transform.childCount, exhibits.transform.childCount];   //定义二维数组
@@ -34,6 +39,7 @@ public class GetCourseWay : MonoBehaviour
 			tt += item.ToString()+" ";
         }
 		Debug.Log(tt);
+
 		//根据遍历顺序，用Astar算法得到路径
 		GameObject begin = exhibits.transform.GetChild(order[0]).gameObject;
 		Vector2 last = new(begin.transform.position.x, begin.transform.position.z);

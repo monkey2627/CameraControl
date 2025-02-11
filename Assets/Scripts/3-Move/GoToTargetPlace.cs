@@ -2,32 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class goToTargetPlace : MonoBehaviour
+//挂载在每个起点上，点击起点自动从起点开始移动
+public class GoToTargetPlace : MonoBehaviour
 {
     private float fixWidth;
     private float fixHeight;
     private int cameraSize = 0;
-    public Camera camera;
+    public Camera travelCamera;
     public GameObject mapCamera;
     public GameObject center;
-    private sampleThroughWay stw;
-    private 
+    private SampleThroughWay stw;
 
     // Start is called before the first frame update
     void Start()
     {
+        travelCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
         mapCamera = GameObject.Find("mapCamera");
-        stw = GameObject.Find("Main-Manager").GetComponent<sampleThroughWay>();
+        stw = GameObject.Find("Main-Manager").GetComponent<SampleThroughWay>();
         cameraSize = (int) mapCamera.GetComponent<Camera>().orthographicSize;
         center.transform.position = new Vector3(-cameraSize, center.transform.position.y, -cameraSize);
         fixHeight = gameObject.transform.parent.parent.GetComponent<RectTransform>().rect.height;
         fixWidth = gameObject.transform.parent.parent.GetComponent<RectTransform>().rect.width;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
     public void Go()
     {
@@ -37,14 +32,14 @@ public class goToTargetPlace : MonoBehaviour
 
         float new_x = center.transform.position.x + mapCamera.GetComponent<Camera>().orthographicSize * 2 * (x / fixWidth);
         float new_z = center.transform.position.z + mapCamera.GetComponent<Camera>().orthographicSize * 2 * (y / fixHeight);
-        camera.transform.position = new Vector3(new_x,stw.tall ,new_z);
+        travelCamera.transform.position = new Vector3(new_x,stw.tall ,new_z);
         
         //将起始点作为路径的第一个关键点
-        stw.Add2WayRecorder(camera.transform.position);
-
-        stw.lastAngel = camera.transform.rotation;
-        //设置相机的位置为起始点，然后开始采样
-        stw.GenerateWay();
+        SampleThroughWay.instance.Add2WayRecorder(travelCamera.transform.position);
+        //设置初始的角度
+        SampleThroughWay.instance.lastAngel = travelCamera.transform.rotation;
+        //设置相机的位置为起始点，生成路径
+        SampleThroughWay.instance.GenerateWay();
 
     }
 }
