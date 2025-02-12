@@ -23,7 +23,7 @@ public class Manager : MonoBehaviour
         SampleThroughWay.instance.GetSamplePointsThroughWay();//根据采样中心点采样 pos + view 并评分
         SampleThroughWay.instance.FilterSamplePoint(sampleFilterScore);//删除特别不好的采样点和采样视角，不参与后期的路径生成
         //准备接收用户反馈，开始语音监听
-        //Voice.instance.StartRecord();
+        Voice.instance.StartRecord();
 
     }
     private void Init()

@@ -8,7 +8,6 @@ public class Voice : MonoBehaviour
 {
     //进行音频压缩 https://zhuanlan.zhihu.com/p/139347299
     public static Voice instance;
-    private AudioSource audioSource;//声音播放组件
     // 当前使用的麦克风名字
     private string microphoneName;
     // 麦克风列表的字符串
@@ -20,10 +19,7 @@ public class Voice : MonoBehaviour
     private AudioClip micRecord;
     private void Awake()
     {
-        instance = this;
-    }
-    private void Start()
-    {        
+        instance = this;        
         // 获取麦克风列表
         micDevicesNames = Microphone.devices;
         if (micDevicesNames.Length <= 0){
@@ -33,10 +29,11 @@ public class Voice : MonoBehaviour
             // 获得列表中第一个麦克风）
             microphoneName = micDevicesNames[0];  
             Debug.Log("当前用户录音的麦克风名字为：" + micDevicesNames[0]);
-        }
-        // 获取播放声音的组件
-        audioSource = GetComponent<AudioSource>();
         
+        }
+    }
+    public void StartRecord()
+    {
         if (!isRecord)
         {
             micRecord = Microphone.Start(microphoneName, true, 60 * 10, 16000);//44100音频采样率   固定格
@@ -47,18 +44,14 @@ public class Voice : MonoBehaviour
         {
             Debug.Log("已经启动录音功能了");
         }
-
     }
-    // Start is called before the first frame update
-    public bool voiceClipPrepared = false;
-    public byte[] sendVoiceData;
-    public float minLevel = 1;
-    public bool saveRecord = false;
+    private float minLevel = 1;
+    private bool saveRecord = false;
     private int beginPos = 0;
     private bool isRecording = false;
     private bool saved = false;
     private List<byte[]> audioList = new List<byte[]>();
-    public float quiet = 0;
+    private float quiet = 0;
     private float quietSeconds(float v)
     {
         if(v > minLevel)
@@ -72,21 +65,23 @@ public class Voice : MonoBehaviour
     {
         //实际麦克风一直开着，只是数据没存
         //检测到声音超过阈值并且现在没有在“录音”，开启录音
-        float v = GetVolume();
-        if (v > minVolumn && !isRecording) {
+        if (isRecord)
+        {
+            float v = GetVolume();
+            if (v > minVolumn && !isRecording) {
             
-            beginPos = Microphone.GetPosition(microphoneName);
-            isRecording = true;
-            saved = false;
-            Debug.Log("开始记录"+beginPos);
-        };
-        quietSeconds(v);
+                beginPos = Microphone.GetPosition(microphoneName);
+                isRecording = true;
+                saved = false;
+                Debug.Log("开始记录"+beginPos);
+            };
+            quietSeconds(v);
     
-        if (v < minVolumn && quiet > 2f && isRecording && !saveRecord && !saved){
-            Debug.Log("结束记录" + Microphone.GetPosition(microphoneName));
-            saveRecord = true;
-        } /**/
-   
+            if (v < minVolumn && quiet > 2f && isRecording && !saveRecord && !saved){
+                Debug.Log("结束记录" + Microphone.GetPosition(microphoneName));
+                saveRecord = true;
+            } /**/
+        }
     }
     //用协程来进行录制
 
@@ -143,10 +138,6 @@ public class Voice : MonoBehaviour
             fs.Write(data, 0, data.Length);
             WriteHeader(fs, micRecord); //wav文件头
         } 
-        audioSource.clip = AudioClip.Create(micRecord.name,data.Length,
-        micRecord.channels, micRecord.frequency, false);
-        audioSource.clip.SetData(soundData,0);
-        audioSource.Play();
     }
     /// <summary>获取麦克风音量</summary>
     /// <returns>麦克风的音量数值</returns>
