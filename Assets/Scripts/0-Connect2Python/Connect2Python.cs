@@ -303,11 +303,15 @@ public class Connect2Python : MonoBehaviour{
     void OnDestroy()
     {
         Debug.Log("CLOSE BY CLIENT");
-      
-       // stream.Flush();  
-        stream.Close();
-      //  stream.Dispose();
-        client.Close();
+
+        if (connected)
+        {
+           // stream.Flush();  
+            stream.Close();
+          //  stream.Dispose();
+            client.Close();
+        }
+
        /* t.Abort();//调用Thread.Abort方法试图强制终止thread线程  
 
         //上面调用Thread.Abort方法后线程thread不一定马上就被终止了，所以我们在这里写了个循环来做检查，看线程thread是否已经真正停止。其实也可以在这里使用Thread.Join方法来等待线程thread终止，Thread.Join方法做的事情和我们在这里写的循环效果是一样的，都是阻塞主线程直到thread线程终止为止  

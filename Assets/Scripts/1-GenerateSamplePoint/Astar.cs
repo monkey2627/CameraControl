@@ -36,17 +36,20 @@ public class Astar : MonoBehaviour
     //地板红色，障碍物黄色，门灰色
     public void InitGrid(float cameraSize)
     {
-        int grid_x_grid = (int) (cameraSize * 2.0f / lengthOfBox);
-        map = new Point[grid_x_grid, grid_x_grid];
-        for (int x = 0; x < grid_x_grid; x++){
-            for (int y = 0; y < grid_x_grid; y++){
-                //从起始点meshOrigin开始绘制网格,起始点是网格的xy轴的交汇点
+        int n = (int) (cameraSize * 2.0f / lengthOfBox);//行、列格子数
+        mapHeight = mapWidth = n;
+        map = new Point[n, n];//存地图，和point一一对应
+
+        for (int x = 0; x < n; x++){
+            for (int y = 0; y < n; y++){
+
+                //从起始点meshOrigin开始绘制网格,meshOrigin是网格的xy轴的交汇点
                 Vector2 pos = new Vector2(x * lengthOfBox, y * lengthOfBox) +  new Vector2(meshOrigin.position.x, meshOrigin.position.z);
                 //绘制可视化地面背景
-                GameObject gameObject = GameObject.Instantiate(Resources.Load("way")) as GameObject;                
+                GameObject gameObject = Instantiate(Resources.Load("way")) as GameObject;                
                 gameObject.transform.localScale = new Vector3(lengthOfBox / 10, 1, lengthOfBox / 10);
                 gameObject.transform.position = new Vector3(pos.x + lengthOfBox / 2, 0, pos.y + lengthOfBox / 2);
-                gameObject.transform.SetParent(GameObject.Find("Ground").transform);
+                gameObject.transform.SetParent(GameObject.Find("Map").transform);
                 gameObject.name = string.Format("{0}_{1}", x,y);
                 //初始化
                 map[x, y] = new Point(pos, x, y);
@@ -54,32 +57,32 @@ public class Astar : MonoBehaviour
                 map[x, y].plane = gameObject;
                 //方形范围检测（这里如果判断我将能检测到的方形碰撞盒的地方设为可行走路面，如果想改为障碍将感叹号去掉即可）
                 isFloor = Physics.BoxCast(gameObject.transform.position, new Vector3(lengthOfBox / 2, 60, lengthOfBox / 2), new Vector3(0, -1, 0), out m_Hit, transform.rotation, maxDistance);
-                bool isObstacle = false;
-                if (isFloor)
-                {
+                if (isFloor)//如果有撞到什么东西,就全部属于有地板的地方
+                {   
+                   
+                    //红色为地面
                     gameObject.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/red")) as Material;
-                    isObstacle = Physics.BoxCast(gameObject.transform.position, new Vector3(lengthOfBox / 2, 60, lengthOfBox / 2), new Vector3(0, -1, 0), out m_Hit, transform.rotation, maxDistance, LayerMask.GetMask("obstacles"));
+                    //如果撞到障碍物，变为黄色
+                    bool isObstacle = Physics.BoxCast(gameObject.transform.position, new Vector3(lengthOfBox / 2, 60, lengthOfBox / 2), new Vector3(0, -1, 0), out m_Hit, transform.rotation, maxDistance, LayerMask.GetMask("obstacles"));
                     if (isObstacle)
-                    {
-                        gameObject.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/yellow")) as Material;
-                    }                
+                        gameObject.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/yellow")) as Material;                
                     map[x, y].isObstacle = isObstacle;
                     bool isDoor = Physics.BoxCast(gameObject.transform.position, new Vector3(lengthOfBox / 2, 60, lengthOfBox / 2), new Vector3(0, -1, 0), out m_Hit, transform.rotation, maxDistance, LayerMask.GetMask("door"));
                     map[x, y].isDoor = isDoor;
+                    //门是黑色
                     if (isDoor)
-                    {
-                        gameObject.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/gray")) as Material;
-                    }
+                        gameObject.GetComponent<MeshRenderer>().material = Instantiate(Resources.Load("Material/black")) as Material;
                 }
                 else
                 {
+                    //没有撞到任何东西，不显示这个map的一块
                     gameObject.SetActive(false);
-                }
-               
+                }          
+                //只有地板才有效
                 map[x, y].isValid = isFloor;
                 map[x, y].label = -1;
             }
-        }/**/
+        }
     }
     //找到地图上有几个房间，随机
     void FindAllRoom()
@@ -402,7 +405,7 @@ public class Astar : MonoBehaviour
         int j = Mathf.RoundToInt((pos.y - meshOrigin.position.z) / lengthOfBox);
         return map[i, j];
     }
-    public  bool isFloorAndNotObtacle(Vector2 pos)
+    public  bool IsFloorAndNotObtacle(Vector2 pos)
     {
 
         Point start =GetIdem(pos);
@@ -413,21 +416,31 @@ public class Astar : MonoBehaviour
             return false;
 
     }
-    public Point chooseOnePoint(Point point)
+    /// <summary>
+    /// 广搜，直到搜到一个可行的
+    /// </summary>
+    /// <param name="point"></param>
+    /// <returns></returns>
+    public Point ChooseOnePoint(Point point)
     {
         //八个方向都可以走
         Point up = null, down = null, left = null, right = null, lu = null, ru = null, ld = null, rd = null;
+        Debug.Log(mapHeight);
         if (point.y < mapHeight - 1)
         {
-            up = map[point.x, point.y + 1];
+          
+            up = map[point.x, point.y + 1];  
+            Debug.Log(up.plane.name);
         }
         if (point.y > 0)
         {
-            down = map[point.x, point.y - 1];
+          
+            down = map[point.x, point.y - 1];  Debug.Log(down.plane.name);
         }
         if (point.x > 0)
         {
             left = map[point.x - 1, point.y];
+            Debug.Log(down.plane.name);
         }
         if (point.x < mapWidth - 1)
         {
@@ -449,7 +462,6 @@ public class Astar : MonoBehaviour
         {
             rd = map[point.x + 1, point.y - 1];
         }
-        List<Point> list = new List<Point>();
         if (down != null && down.isObstacle == false && down.isValid == true)
         {
             return down;
@@ -482,6 +494,22 @@ public class Astar : MonoBehaviour
         {
             return rd;
         }
+        if (down != null)
+            return ChooseOnePoint(down);
+        else if (up != null) 
+            return ChooseOnePoint(up);
+        else if(left != null) 
+            return ChooseOnePoint(left);
+        else if (right != null)
+            return ChooseOnePoint(right);
+        else if (lu != null)
+            return ChooseOnePoint(lu);
+        else if (ld != null)
+            return ChooseOnePoint(ld);
+        else if (ru != null)
+            return ChooseOnePoint(ru);
+        else if (rd != null)
+            return ChooseOnePoint(rd);
         return null;
     }
     /// <summary>

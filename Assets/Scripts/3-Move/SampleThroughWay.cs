@@ -25,7 +25,7 @@ public class SampleThroughWay : MonoBehaviour
         //根据TSP问题的遗传算法，根据所有的展览物的位置生成一个访问回路（访问顺序-getcourseway）
         //然后根据得到的访问顺序、场景环境信息，用Astar算法生成粗糙路径上所有关键点
         List<Point> points =  GetCourseWay.instance.GetOrderAndWayPoints();   
-        Debug.Log("get course way");
+        //Debug.Log("get course way");
         //根据粗糙路径点再画格子，每个关键点代表一个格子，修改map[x,y]属于的采样格子标记(label)
         GetSampleCenters(points);
      
@@ -41,7 +41,7 @@ public class SampleThroughWay : MonoBehaviour
             }
             //StartCoroutine("GenerateNextCenter");
             //采样点对应ui
-            leftDown = GameObject.Find("leftDown");
+            meshOrigin = GameObject.Find("meshOrigin");
             mapCamera = GameObject.Find("mapCamera");
             navigationMap = GameObject.Find("navigationMap");
             dl = navigationMap.GetComponent<drawline>();
@@ -85,19 +85,26 @@ public class SampleThroughWay : MonoBehaviour
             label++;
         }
     }
-    public void GetSamplePointsThroughWay()
+    public void StartGetSamplePointsThroughWay()
+    {
+        StartCoroutine("GetSamplePointsThroughWay");
+    }
+   IEnumerator GetSamplePointsThroughWay()
     {
         foreach (Point point in sampleCenters){
             //格子左下角
+            Debug.Log("ss");
             Vector2 pos = point.worldpos;
             //创建一个新的采样点集合
-            SamplePointBunch bunch = new SamplePointBunch();
-            bunch.pos = new Vector3(pos.x,1.7f,pos.y);
-            bunch.spl = new List<SamplePoint>();
-            bunch.label = point.samplePointBunchLabel;
-
+            SamplePointBunch bunch = new()
+            {
+                pos = new Vector3(pos.x, 1.7f, pos.y),
+                spl = new List<SamplePoint>(),
+                label = point.samplePointBunchLabel
+            };
+            spbl.Add(bunch);
             //bunch的左下角
-            Vector2 ld = new Vector2(pos.x - sampleHalfNum * Astar.instance.lengthOfBox , pos.y - sampleHalfNum * Astar.instance.lengthOfBox);
+            Vector2 ld = new(pos.x - sampleHalfNum * Astar.instance.lengthOfBox , pos.y - sampleHalfNum * Astar.instance.lengthOfBox);
 
             //设定sampleNum个采样点的位置
             int k = 0;
@@ -108,16 +115,18 @@ public class SampleThroughWay : MonoBehaviour
                 float realx = ld.x + tmpWidth * (2 * sampleHalfNum + 1) * Astar.instance.lengthOfBox;
                 float realy = ld.y + tmpHeight * (2 * sampleHalfNum + 1) * Astar.instance.lengthOfBox;
                 //看该采样点属于map哪个格子
-                int x = (int)( (realx - leftDown.transform.position.x) / Astar.instance.lengthOfBox);
-                int y = (int)( (realy - leftDown.transform.position.z) / Astar.instance.lengthOfBox);
+                int x = (int)( (realx - meshOrigin.transform.position.x) / Astar.instance.lengthOfBox);
+                int y = (int)( (realy - meshOrigin.transform.position.z) / Astar.instance.lengthOfBox);
                 //对应的格子在当前bunch之内，是有效的
                 if (Astar.instance.map[x,y].samplePointBunchLabel == bunch.label)
                 {
-                    SamplePoint samplePoint = new SamplePoint();
-                    samplePoint.pos = new Vector3(realx, 1.7f, realy);
-                    samplePoint.label = ShowUI(GetUIPos(realx, realy));
-                    //得到该采样点所有方向的图像,得到所有视角的sprite
-                    samplePoint.views = new List<View>();
+                    SamplePoint samplePoint = new()
+                    {
+                        pos = new Vector3(realx, 1.7f, realy),
+                        label = ShowUI(GetUIPos(realx, realy)),
+                        //得到该采样点所有方向的图像,得到所有视角的sprite
+                        views = new List<View>()
+                    };
                     for (int v = 0; v < 6; v++)
                     {
                         sampleCamera.transform.position = pos;
@@ -126,7 +135,8 @@ public class SampleThroughWay : MonoBehaviour
                         samplePoint.valid = true;
                         samplePoint.passed = false;
                         
-                        unsolvedSprite.Add(new ForPicture() {bunch = spbl.Count, samplePoint = bunch.spl.Count, view = v});
+                        //注意，都是从0开始的
+                        unsolvedSprite.Add(new ForPicture() {bunch = spbl.Count-1, samplePoint = bunch.spl.Count, view = v});
                         samplePoint.views.Add(new View() {valid = true, score = 0, texture = ViewManager.CaptureCameraForTexture(sampleCamera.GetComponent<Camera>()), rot = quaternions[v] });
                     }
                     //将当前这个samplePoint加入当前的bunch中
@@ -136,9 +146,9 @@ public class SampleThroughWay : MonoBehaviour
                 //当没有处理过的图达到一定的数量，集中处理，并得到每个图的评分
                 if(unsolvedSprite.Count >= sampleSolveSize * sampleSolveSize)
                 {
-                    ViewManager.getMultipleView(sampleSolveSize, unsolvedSprite);
+                    ViewManager.GetMultipleView(sampleSolveSize, unsolvedSprite);
                     //得到图之后传给llm然后得到评分再保存
-                    List<ForPicture> t = new List<ForPicture>();
+                    List<ForPicture> t = new();
                     for(int z = 0; z < sampleSolveSize * sampleSolveSize; z++)
                     {
                         t.Add(unsolvedSprite[0]);
@@ -152,7 +162,7 @@ public class SampleThroughWay : MonoBehaviour
                 }
                 k++;
             }
-
+            yield return new WaitForSeconds(0.3f);
         }
     }
     public void FilterSamplePoint(float score)
@@ -201,13 +211,13 @@ public class SampleThroughWay : MonoBehaviour
     }
     public GameObject mainCamera;//用户视野相机
     /*public void setCenterAndStartSampling(GameObject center){
-        float x = (center.transform.position.x - leftDown.transform.position.x) / (cameraSize * 2) * mapWidth;
-        float y = (center.transform.position.z - leftDown.transform.position.z) / (cameraSize * 2) * mapHeight;
+        float x = (center.transform.position.x - meshOrigin.transform.position.x) / (cameraSize * 2) * mapWidth;
+        float y = (center.transform.position.z - meshOrigin.transform.position.z) / (cameraSize * 2) * mapHeight;
         cameraOnUI.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, y);
         //找到当前格子里面最大的采样点并加入
         //判断中心点的位置处于哪个格子里
-        int gridx = (int)((mainCamera.transform.position.x - leftDown.transform.position.x) / Astar.instance.lengthOfBox);
-        int gridy = (int)((mainCamera.transform.position.z - leftDown.transform.position.z) / Astar.instance.lengthOfBox);
+        int gridx = (int)((mainCamera.transform.position.x - meshOrigin.transform.position.x) / Astar.instance.lengthOfBox);
+        int gridy = (int)((mainCamera.transform.position.z - meshOrigin.transform.position.z) / Astar.instance.lengthOfBox);
         if (Astar.instance.map[gridx, gridy].samplePointBunchLabel == -2)
         {
             Debug.Log("当前选择的点不在任何一个bunch内");
@@ -280,8 +290,8 @@ public class SampleThroughWay : MonoBehaviour
         //每次都是整个重新生成
         finalWay.Clear();
         //判断中心点的位置处于哪个格子里
-        int x = (int)((mainCamera.transform.position.x - leftDown.transform.position.x) / Astar.instance.lengthOfBox);
-        int y = (int)((mainCamera.transform.position.z - leftDown.transform.position.z) / Astar.instance.lengthOfBox);
+        int x = (int)((mainCamera.transform.position.x - meshOrigin.transform.position.x) / Astar.instance.lengthOfBox);
+        int y = (int)((mainCamera.transform.position.z - meshOrigin.transform.position.z) / Astar.instance.lengthOfBox);
         int bunchLabel = Astar.instance.map[x, y].samplePointBunchLabel;
         if (bunchLabel == -2)
         {
@@ -379,8 +389,8 @@ public class SampleThroughWay : MonoBehaviour
      * public void chooseSamplePoints(int number)
     {   
         //判断中心点的位置处于哪个格子里
-        int x = (int)((mainCamera.transform.position.x - leftDown.transform.position.x) / Astar.instance.lengthOfBox);
-        int y = (int)((mainCamera.transform.position.z - leftDown.transform.position.z) / Astar.instance.lengthOfBox);
+        int x = (int)((mainCamera.transform.position.x - meshOrigin.transform.position.x) / Astar.instance.lengthOfBox);
+        int y = (int)((mainCamera.transform.position.z - meshOrigin.transform.position.z) / Astar.instance.lengthOfBox);
         if (Astar.instance.map[x,y].samplePointBunchLabel == -2){
             Debug.Log("当前选择的点不在任何一个bunch内");
             return; //说明当前正处于的点不在任何一个bunch内
@@ -503,7 +513,7 @@ public class SampleThroughWay : MonoBehaviour
    
 
 #region 生成并显示采样点对应的UI    
-    private  GameObject leftDown;
+    private  GameObject meshOrigin;
     private  GameObject mapCamera;
     private  GameObject navigationMap;
     private drawline dl;
@@ -515,8 +525,8 @@ public class SampleThroughWay : MonoBehaviour
         int h = (int)navigationMap.GetComponent<RectTransform>().rect.height;
         Vector2 uiPos = new(x, y)
         {
-            x = (x - leftDown.transform.position.x) / (mapCamera.GetComponent<Camera>().orthographicSize * 2) * w,
-            y = (y - leftDown.transform.position.z) / (mapCamera.GetComponent<Camera>().orthographicSize * 2) * h
+            x = (x - meshOrigin.transform.position.x) / (mapCamera.GetComponent<Camera>().orthographicSize * 2) * w,
+            y = (y - meshOrigin.transform.position.z) / (mapCamera.GetComponent<Camera>().orthographicSize * 2) * h
         };
         return uiPos;
     }
@@ -525,16 +535,17 @@ public class SampleThroughWay : MonoBehaviour
         int w = (int)navigationMap.GetComponent<RectTransform>().rect.width;
         int h = (int)navigationMap.GetComponent<RectTransform>().rect.height;
         float cameraSize = mapCamera.GetComponent<Camera>().orthographicSize;
-        float uix = -w / 2 + (x - leftDown.transform.position.x) / (cameraSize * 2) * w;
-        float uiy = -h / 2 + (y - leftDown.transform.position.z) / (cameraSize * 2) * h;
+        float uix = -w / 2 + (x - meshOrigin.transform.position.x) / (cameraSize * 2) * w;
+        float uiy = -h / 2 + (y - meshOrigin.transform.position.z) / (cameraSize * 2) * h;
         //  toGOUI.Add(); 
         //Debug.Log(dl);
         dl.addRect(new Vector2(uix, uiy));
     }
     GameObject ShowUI(Vector2 pos)
     {
+        Debug.Log("hahah");
         GameObject go = Instantiate(Resources.Load("SamplePoint")) as GameObject;
-        go.transform.parent = GameObject.Find("SamplePoints").transform;
+        go.transform.SetParent(GameObject.Find("SamplePoints").transform);
         go.GetComponent<RectTransform>().anchoredPosition = pos;
         return go;
     } 
@@ -543,8 +554,8 @@ public class SampleThroughWay : MonoBehaviour
         float cameraSize = mapCamera.GetComponent<Camera>().orthographicSize;
         float w = navigationMap.GetComponent<RectTransform>().rect.width;
         float h = navigationMap.GetComponent<RectTransform>().rect.height;
-        float x = (mainCamera.transform.position.x - leftDown.transform.position.x) / (cameraSize * 2) * w;
-        float y = (mainCamera.transform.position.z - leftDown.transform.position.z) / (cameraSize * 2) * h;
+        float x = (mainCamera.transform.position.x - meshOrigin.transform.position.x) / (cameraSize * 2) * w;
+        float y = (mainCamera.transform.position.z - meshOrigin.transform.position.z) / (cameraSize * 2) * h;
         cameraOnUI.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, y);
     }
 }

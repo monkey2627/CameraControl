@@ -18,7 +18,6 @@ public class GetCourseWay : MonoBehaviour
 		double[,] Mat = new double[exhibits.transform.childCount, exhibits.transform.childCount];   //定义二维数组
 		for (int i = 0; i < exhibits.transform.childCount; i++)
 		{
-			Debug.Log(exhibits.transform.GetChild(i).name);
 			for (int j = 0; j < exhibits.transform.childCount; j++)
 			{
 				Mat[i, j] = (exhibits.transform.GetChild(i).transform.position - exhibits.transform.GetChild(j).transform.position).magnitude;
@@ -33,62 +32,74 @@ public class GetCourseWay : MonoBehaviour
 		//得到遍历藏品的粗糙路径,从0开始，大小为exhibits.transform.childCount
 		int[] order = ga.GaTsp(Mat,exhibits.transform.childCount);
 		Debug.Log("get order");
-		string tt = "";
+		/*string tt = "";
         foreach (var item in order)
         {
 			tt += item.ToString()+" ";
         }
 		Debug.Log(tt);
+		*/
 
 		//根据遍历顺序，用Astar算法得到路径
 		GameObject begin = exhibits.transform.GetChild(order[0]).gameObject;
 		Vector2 last = new(begin.transform.position.x, begin.transform.position.z);
+		
+		
 		//存粗糙回路上所有的关键点
 		List<Point> points = new List<Point>();
-		List<Point> thisPoints;
+		List<Point> pointsBetween;
 		Point start;
 		Point end;
-		Vector2 next;
+		Vector2 now;
 		for (int c = 1; c < order.Length; c++)
 		{
 			GameObject t = exhibits.transform.GetChild(order[c]).gameObject;
 			Debug.Log("第"+c.ToString()+"个孩子的名字为"+ t.name);
-			next = new(t.transform.position.x, t.transform.position.z);
+			
+			
 			start = Astar.instance.GetIdem(last);
-            if (start.isObstacle)
+            if (start.isObstacle)//门不算obstacle
             {
-				start = Astar.instance.chooseOnePoint(start);
+				start = Astar.instance.ChooseOnePoint(start);
             }
-			end = Astar.instance.GetIdem(next);
+			
+			now = new(t.transform.position.x, t.transform.position.z);
+			end = Astar.instance.GetIdem(now);
             if (end.isObstacle)
             {
-				end = Astar.instance.chooseOnePoint(end);
+				Debug.Log(end.plane.name);
+				end = Astar.instance.ChooseOnePoint(end);
             }
-			thisPoints = Astar.instance.FindPath(start, end);
-			foreach (Point p in thisPoints)
+
+			pointsBetween = Astar.instance.FindPath(start, end);
+
+			foreach (Point p in pointsBetween)
             {
 				points.Add(p);
 				Debug.Log(p.x + "_" + p.y);
             }
-			last = next;
+			last = now;
 		}
+		
+		//尾巴到起点，形成一个回路
 		start = Astar.instance.GetIdem(last);
 		if (start.isObstacle)
 		{
-			start = Astar.instance.chooseOnePoint(start);
+			start = Astar.instance.ChooseOnePoint(start);
 		}
-		next = new Vector2(begin.transform.position.x, begin.transform.position.z);
-		end = Astar.instance.GetIdem(next);
+
+		now = new Vector2(begin.transform.position.x, begin.transform.position.z);
+		end = Astar.instance.GetIdem(now);
 		if (end.isObstacle)
-		{
-			end = Astar.instance.chooseOnePoint(end);
+		{//结尾处
+			end = Astar.instance.ChooseOnePoint(end);
 		}
-		//尾巴到起点，形成一个回路
-		thisPoints =  Astar.instance.FindPath(start, end);
-		foreach (Point p in thisPoints)
+		
+		pointsBetween =  Astar.instance.FindPath(start, end);
+		foreach (Point p in pointsBetween)
 		{
-			points.Add(p);
-		}
+					points.Add(p);
+		}	
 		return points;
 	}
 

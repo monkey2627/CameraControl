@@ -74,7 +74,7 @@ public class drawline : RawImage
         UIVertex leftDown = new UIVertex();
         leftDown.position = last - vertical * width;
         leftDown.color = Color.red;
-       // Debug.Log(leftDown.position);
+       // Debug.Log(meshOrigin.position);
         t.Add(leftDown);        
 
         UIVertex rightDown = new UIVertex();
@@ -110,8 +110,8 @@ public class drawline : RawImage
             UIVertex uIVertex = new UIVertex();
             uIVertex.position = lastUP;
 
-            UIVertex leftDown = new UIVertex();
-            leftDown.position = lastDown;
+            UIVertex meshOrigin = new UIVertex();
+            meshOrigin.position = lastDown;
 
             UIVertex rightUP = new UIVertex();
             rightUP.position = lastUP;

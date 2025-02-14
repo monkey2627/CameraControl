@@ -30,7 +30,7 @@ public class SamplePointsGenerater : MonoBehaviour
     public List<SamplePoint> choosedSamplePoints; // 根据当前相机(即中心点)的位置来添加未当过采样点的点进list
 
     //为了UI和真实位置的映射
-    public GameObject leftDown;
+    public GameObject meshOrigin;
     public float fixWidth;
     public float fixHeight;
     public int cameraSize = 0;
@@ -69,7 +69,7 @@ public class SamplePointsGenerater : MonoBehaviour
         {
             quaternions.Add(Quaternion.Euler(0, 360 / 6 * i, 0));
         }
-        leftDown = GameObject.Find("downLeft");
+        meshOrigin = GameObject.Find("downLeft");
         frameObjectFather = GameObject.Find("boundaryPoints");
         cameraOnUI = GameObject.Find("peopleUI"); ;//在UI上代表移动中的摄像机的圆点
         sampleCamera = GameObject.Find("SampleCamera");
@@ -209,8 +209,8 @@ public class SamplePointsGenerater : MonoBehaviour
                     {
                         GameObject go = show(uix, uiy);
                         //得到该采样点所有方向的图像
-                        float realx = leftDown.transform.position.x + (uix / w) * mapCamera.GetComponent<Camera>().orthographicSize * 2;
-                        float realz = leftDown.transform.position.z + (uiy / h) * mapCamera.GetComponent<Camera>().orthographicSize * 2;
+                        float realx = meshOrigin.transform.position.x + (uix / w) * mapCamera.GetComponent<Camera>().orthographicSize * 2;
+                        float realz = meshOrigin.transform.position.z + (uiy / h) * mapCamera.GetComponent<Camera>().orthographicSize * 2;
                         //得到所有视角的sprite
                         getView(new Vector3(realx, tall, realz), i, j, k, go);
                         num = num + 6;
@@ -311,8 +311,8 @@ public class SamplePointsGenerater : MonoBehaviour
     public void SetCenterAndSampling(GameObject center)
     {
 
-        float x = (center.transform.position.x - leftDown.transform.position.x) / (cameraSize * 2) * fixWidth;
-        float y = (center.transform.position.z - leftDown.transform.position.z) / (cameraSize * 2) * fixHeight;
+        float x = (center.transform.position.x - meshOrigin.transform.position.x) / (cameraSize * 2) * fixWidth;
+        float y = (center.transform.position.z - meshOrigin.transform.position.z) / (cameraSize * 2) * fixHeight;
         cameraOnUI.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, y);
 
         chooseSamplePoints(30);

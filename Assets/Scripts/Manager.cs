@@ -13,6 +13,10 @@ public class Manager : MonoBehaviour
     void Start()
     {
         Init();
+        Debug.Log("hahah");
+        GameObject go = Instantiate(Resources.Load("SamplePoint")) as GameObject;
+        go.transform.SetParent(GameObject.Find("SamplePoints").transform);
+     
         Debug.Log("Finish Init");
         //先与python端连接
         // connect.Connect2server();
@@ -20,10 +24,12 @@ public class Manager : MonoBehaviour
         //在用户行动之前，预打好所有pos + view 的评分
         SampleThroughWay.instance.GetMap();//初始化地图，在整个界面上画格子,得到Map[Point]
         SampleThroughWay.instance.GenerateSampleCenters();//得到所有的采样中心点
-        SampleThroughWay.instance.GetSamplePointsThroughWay();//根据采样中心点采样 pos + view 并评分
-        SampleThroughWay.instance.FilterSamplePoint(sampleFilterScore);//删除特别不好的采样点和采样视角，不参与后期的路径生成
+       Debug.Log("GetAllSampleCenters");
+        SampleThroughWay.instance.StartGetSamplePointsThroughWay();//根据采样中心点采样 pos + view 并评分
+       // SampleThroughWay.instance.FilterSamplePoint(sampleFilterScore);//删除特别不好的采样点和采样视角，不参与后期的路径生成
+
         //准备接收用户反馈，开始语音监听
-        Voice.instance.StartRecord();
+        //Voice.instance.StartRecord();
 
     }
     private void Init()

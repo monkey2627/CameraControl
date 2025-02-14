@@ -9,24 +9,22 @@ public class ViewManager : MonoBehaviour
 {   
     static int num1 = 0;
     public  Quaternion[] quaternion = new Quaternion[4];
-    private static SampleThroughWay stw;
+ 
     // Start is called before the first frame update
     void Start()
     {
         num1 = 0;
-        //testCamera = GameObject.Find("SampleCamera");
-        stw = gameObject.GetComponent<SampleThroughWay>();
     }
     
     //得到num x num个view组成的一整张图片保存下来，每个图片分别生成texture存到相应的结构体中
-    public static void getMultipleView(int num,List<ForPicture> forPictures)
+    public static void GetMultipleView(int num,List<ForPicture> forPictures)
     {
         int gap = 10;
         int screenWidth = Screen.width;
         int screenHeight = Screen.height;
         int singleWidth = screenWidth / num;
         int singleHeight = screenHeight / num;
-        Texture2D combinedView = new Texture2D((int)singleWidth * num + (num-1) * gap, (int)singleHeight * num + (num - 1) * gap, TextureFormat.RGB24, false);
+        Texture2D combinedView = new((int)singleWidth * num + (num-1) * gap, (int)singleHeight * num + (num - 1) * gap, TextureFormat.RGB24, false);
 
         // 创建一个RenderTexture对象,设定长宽，0表示不启用深度
         //RenderTexture rt = new RenderTexture((int)screenWidth, (int)screenHeight, 0);
@@ -39,21 +37,31 @@ public class ViewManager : MonoBehaviour
                 // 12 
           //  camera.targetTexture = rt;
             ForPicture t = forPictures[i * num + p];
-          
-            //testCamera.transform.position = spg.allSamplePoints[t.i, t.j, t.k].pos;
-            //testCamera.transform.rotation = spg.allSamplePoints[t.i, t.j, t.k].views[t.v].rot;
-            //camera.Render();
 
-            // 激活这个rt, 并从中中读取像素。.ReadPixels会从RenderTexture.active中读取像素
-           // RenderTexture.active = rt;
-            // 创建一个新的Texture2D对象，大小为 w, h
-            //Texture2D screenShot = new Texture2D((int)screenWidth, screenHeight, TextureFormat.RGB24, false);
-            //rect 指定了要从RenderTexture中读取的区域。
-            //如果这个矩形区域的宽高与RenderTexture的尺寸相同，那么会读取整个RenderTexture的内容
-           // screenShot.ReadPixels(new Rect(0, 0, screenWidth, screenHeight), 0, 0);
-            //现在这个texture上是截下来的内容
-           // screenShot.Apply();
-            Texture2D resize = ResizeTexture(stw.spbl[t.bunch].spl[t.samplePoint].views[t.view].texture, singleWidth, singleHeight);
+                //testCamera.transform.position = spg.allSamplePoints[t.i, t.j, t.k].pos;
+                //testCamera.transform.rotation = spg.allSamplePoints[t.i, t.j, t.k].views[t.v].rot;
+                //camera.Render();
+
+                // 激活这个rt, 并从中中读取像素。.ReadPixels会从RenderTexture.active中读取像素
+                // RenderTexture.active = rt;
+                // 创建一个新的Texture2D对象，大小为 w, h
+                //Texture2D screenShot = new Texture2D((int)screenWidth, screenHeight, TextureFormat.RGB24, false);
+                //rect 指定了要从RenderTexture中读取的区域。
+                //如果这个矩形区域的宽高与RenderTexture的尺寸相同，那么会读取整个RenderTexture的内容
+                // screenShot.ReadPixels(new Rect(0, 0, screenWidth, screenHeight), 0, 0);
+                //现在这个texture上是截下来的内容
+                // screenShot.Apply();
+                Debug.Log("________");
+                Debug.Log(SampleThroughWay.instance.spbl.Count);
+                Debug.Log(SampleThroughWay.instance.spbl[0].spl.Count);
+                Debug.Log(SampleThroughWay.instance.spbl[0].spl[0].views.Count); 
+                Debug.Log(t.bunch);
+                Debug.Log(t.samplePoint);
+                Debug.Log(t.view);
+                Debug.Log(SampleThroughWay.instance.spbl.Count);
+                Debug.Log(SampleThroughWay.instance.spbl[t.bunch].spl.Count);
+                Debug.Log(SampleThroughWay.instance.spbl[t.bunch].spl[t.samplePoint].views.Count);
+                Texture2D resize = ResizeTexture(SampleThroughWay.instance.spbl[t.bunch].spl[t.samplePoint].views[t.view].texture, singleWidth, singleHeight);
             //Sprite newS =  Sprite.Create(resize, new Rect(0, 0, resize.width, resize.height), new Vector2(0.5f, 0.5f));
             for (int z = 0; z < singleWidth; z++)
             {
