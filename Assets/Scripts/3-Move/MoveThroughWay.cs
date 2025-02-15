@@ -6,8 +6,10 @@ public class MoveThroughWay : MonoBehaviour
 {
     // Start is called before the first frame update
     public List<RotationAndPosition> toGo = new();
+    public int count = 0;
     private float speed = 100f;
     public static MoveThroughWay instance;
+    int number;
     private void Awake()
     {
         instance = this;
@@ -19,7 +21,8 @@ public class MoveThroughWay : MonoBehaviour
     public void GetWayPointsBetween(Vector3 p1,Vector3 p2,Vector3 before,Vector3 next,Quaternion begin,Quaternion end)
     {
         //要根据距离来调整平滑点的数量,300m对应200比较好
-        int number = (int)(p2 - p1).magnitude * 2 / 4;
+        // number = (int)(p2 - p1).magnitude * 2 / 4;
+         number = 5;
         for (int i = 0; i < number;i++)
         {
             GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -60,12 +63,16 @@ public class MoveThroughWay : MonoBehaviour
             float gap = (next - SampleThroughWay.instance.mainCamera.transform.position).magnitude;
             if( t > gap)
             {
-
-                // target.transform.position = next; 
                 SampleThroughWay.instance.mainCamera.transform.position += (next - SampleThroughWay.instance.mainCamera.transform.position).normalized * s;
                 SampleThroughWay.instance.CameraUIFollow();
                 toGo.RemoveAt(0);
                 t -= gap;
+                count++;
+                if (count == number)
+                {
+                    SampleThroughWay.instance.GotoNextTarget();
+                }
+                
             }
             else
             {
@@ -73,6 +80,7 @@ public class MoveThroughWay : MonoBehaviour
                 SampleThroughWay.instance. mainCamera.transform.position += (next - SampleThroughWay.instance.mainCamera.transform.position).normalized * s;
                 SampleThroughWay.instance.CameraUIFollow();
             }
+           
         }
     }
 

@@ -63,7 +63,7 @@ public class Connect2Python : MonoBehaviour{
         }
         catch (SocketException se)
         {
-            Debug.Log("接收失败");
+            Debug.Log("接收失败:"+se);
         }
     }
     int test = 0;
@@ -298,8 +298,6 @@ public class Connect2Python : MonoBehaviour{
        
 
     }
-    bool ifchangestate = false;
-    string totalReadString = "";
     void OnDestroy()
     {
         Debug.Log("CLOSE BY CLIENT");

@@ -92,15 +92,15 @@ public class SampleThroughWay : MonoBehaviour
    IEnumerator GetSamplePointsThroughWay()
     {
         foreach (Point point in sampleCenters){
-            //格子左下角
-            Debug.Log("ss");
+            //格子左下角在三维世界中的坐标
             Vector2 pos = point.worldpos;
             //创建一个新的采样点集合
             SamplePointBunch bunch = new()
             {
                 pos = new Vector3(pos.x, 1.7f, pos.y),
                 spl = new List<SamplePoint>(),
-                label = point.samplePointBunchLabel
+                label = point.samplePointBunchLabel,
+                valid = true
             };
             spbl.Add(bunch);
             //bunch的左下角
@@ -127,17 +127,27 @@ public class SampleThroughWay : MonoBehaviour
                         //得到该采样点所有方向的图像,得到所有视角的sprite
                         views = new List<View>()
                     };
+                    samplePoint.label.name = bunch.label.ToString()+"_"+k.ToString();
                     for (int v = 0; v < 6; v++)
                     {
-                        sampleCamera.transform.position = pos;
-                        sampleCamera.transform.rotation = quaternions[v];
+                        sampleCamera.transform.SetPositionAndRotation(samplePoint.pos, quaternions[v]);
                                
                         samplePoint.valid = true;
                         samplePoint.passed = false;
+                    
                         
+
                         //注意，都是从0开始的
                         unsolvedSprite.Add(new ForPicture() {bunch = spbl.Count-1, samplePoint = bunch.spl.Count, view = v});
-                        samplePoint.views.Add(new View() {valid = true, score = 0, texture = ViewManager.CaptureCameraForTexture(sampleCamera.GetComponent<Camera>()), rot = quaternions[v] });
+                        
+                        if (!Connect2Python.instance.connected)
+                        {
+                            samplePoint.views.Add(new View() { valid = true, score = (float)ra.NextDouble(), texture = ViewManager.CaptureCameraForTexture(sampleCamera.GetComponent<Camera>()), rot = quaternions[v]});
+                        }
+                        else
+                        {
+                            samplePoint.views.Add(new View() {valid = true, score = 0, texture = ViewManager.CaptureCameraForTexture(sampleCamera.GetComponent<Camera>()), rot = quaternions[v] });
+                        }
                     }
                     //将当前这个samplePoint加入当前的bunch中
                     bunch.spl.Add(samplePoint);
@@ -146,6 +156,7 @@ public class SampleThroughWay : MonoBehaviour
                 //当没有处理过的图达到一定的数量，集中处理，并得到每个图的评分
                 if(unsolvedSprite.Count >= sampleSolveSize * sampleSolveSize)
                 {
+                    if (Connect2Python.instance.connected) { 
                     ViewManager.GetMultipleView(sampleSolveSize, unsolvedSprite);
                     //得到图之后传给llm然后得到评分再保存
                     List<ForPicture> t = new();
@@ -157,8 +168,9 @@ public class SampleThroughWay : MonoBehaviour
                     //将这次处理的所有图片的坐标信息存在 t 中，存入forscore
                     forScore.Add(t);
                     //如果连接没问题，将生成的总图片发给服务器端
-                    if(Connect2Python.instance.connected)
+                  
                         Connect2Python.instance.SendFrame();
+                    }
                 }
                 k++;
             }
@@ -169,6 +181,14 @@ public class SampleThroughWay : MonoBehaviour
     {
         for(int z = 0; z < spbl.Count; z++)
         {
+            if(spbl[z].spl.Count == 0)
+            {
+                Debug.Log("delete:" + z);
+                var temp = spbl[z];
+                temp.valid = false;
+                spbl[z] = temp;
+
+            }
             for(int i = 0; i < spbl[z].spl.Count; i++)
             {
                 int t = 0;
@@ -188,6 +208,7 @@ public class SampleThroughWay : MonoBehaviour
                 }
                 if(t == 0)//如果完全没有合适的视角，删掉这个采样点
                 {
+                    Debug.Log("delete:" + z);
                     var temp = spbl[z].spl[i];
                     temp.valid = false;
                     spbl[z].spl[i] = temp;
@@ -287,11 +308,13 @@ public class SampleThroughWay : MonoBehaviour
     //预处理之后一次性生成完整路径，每次选择格子里最高的就完事，后面是改变评分再重新选就完事
     public void GenerateWay()
     {
+        Debug.Log("StartGenerateWay");
         //每次都是整个重新生成
         finalWay.Clear();
         //判断中心点的位置处于哪个格子里
         int x = (int)((mainCamera.transform.position.x - meshOrigin.transform.position.x) / Astar.instance.lengthOfBox);
         int y = (int)((mainCamera.transform.position.z - meshOrigin.transform.position.z) / Astar.instance.lengthOfBox);
+        //Debug.Log(x + "_" + y);
         int bunchLabel = Astar.instance.map[x, y].samplePointBunchLabel;
         if (bunchLabel == -2)
         {
@@ -311,48 +334,49 @@ public class SampleThroughWay : MonoBehaviour
 
                 int maxView = 0;
 
-                float _maxScore = -1;
+                float maxScore = -1;
 
-                
+                //选择出这个bunch中最大分数的视点
                 for (int i = 0; i < bunch.spl.Count; i++)
                 {
                     if (bunch.spl[i].valid)
-                    {//选择出这个bunch中最大分数的视点
+                    {
                         for (int j = 0; j < bunch.spl[i].views.Count; j++)
                         {
                             if (bunch.spl[i].views[j].valid)
                             {
-                                if (_maxScore < bunch.spl[i].views[j].score)
+                                if (maxScore < bunch.spl[i].views[j].score)
                                 {
                                     maxSamplePoint = i;
                                     maxView = j;
-                                    _maxScore = (bunch.spl[i].views[j].score);
+                                    maxScore = bunch.spl[i].views[j].score;
                                 }
                             }
                         }
-                        //改变当前的point状态为passed，并且将UI变为绿色
-                        var point = bunch.spl[maxSamplePoint];
-                        point.passed = true;
-                        var ui = point.label;
-                        ui.GetComponent<CustomUI.CircularImage>().color = Color.green;
-                        point.label = ui;
-                        bunch.spl[maxSamplePoint] = point;
-                        spbl[i] = bunch;                        
-                        finalWay.Add(new PosAndView() { quaternion = spbl[i].spl[maxSamplePoint].views[maxView].rot, point = spbl[i].spl[maxSamplePoint]});
-                        //将这个view的图像显示出来
-                        //showSprite(spbl[i].spl[maxSamplePoint].views[maxView].texture);
-                        ////将当前点加入选择的采样点集合中，并且将对应的UI图标颜色变绿
-                        //choosedSamplePoints.Add(bunch.spl[maxSamplePoint]);
                     }
                 }
+                Debug.Log(maxSamplePoint);
+                Debug.Log(bunch.spl.Count);
+                Debug.Log(maxView);
+                var point = bunch.spl[maxSamplePoint];
+                point.passed = true;
+                var ui = point.label;
+                ui.GetComponent<CustomUI.CircularImage>().color = Color.green;
+                point.label = ui;
+                bunch.spl[maxSamplePoint] = point;
+                spbl[k] = bunch;                        
+                finalWay.Add(new PosAndView() { quaternion = spbl[k].spl[maxSamplePoint].views[maxView].rot, point = spbl[k].spl[maxSamplePoint]});
+
             }
             k++;
         }
-
-        //根据生成的路径，得到平滑点，进行平滑移动
-        while (finalWay.Count > 0)
+        Debug.Log("finish");
+        //根据生成的路径，得到平滑点，进行平滑移动,改成走到现在的终点时才会继续往下走，方便看
+        if(finalWay.Count > 0)
         {
 
+           
+            MoveThroughWay.instance.count = 0;
             Vector3 next = finalWay[0].point.pos;
             Quaternion nextAngel = finalWay[0].quaternion;
             finalWay[0].point.label.GetComponent<CustomUI.CircularImage>().color = Color.blue;
@@ -373,6 +397,34 @@ public class SampleThroughWay : MonoBehaviour
 
         }
     }    
+    public void GotoNextTarget()
+    {
+        //根据生成的路径，得到平滑点，进行平滑移动,改成走到现在的终点时才会继续往下走，方便看
+        if (finalWay.Count > 0)
+        {
+            Debug.Log("GotoNextTarget"+finalWay[0].point.label.name);
+            Debug.Log(finalWay.Count);
+            Vector3 next = finalWay[0].point.pos;
+            MoveThroughWay.instance.count = 0;
+            Quaternion nextAngel = finalWay[0].quaternion;
+            finalWay[0].point.label.GetComponent<CustomUI.CircularImage>().color = Color.blue;
+
+            ShowSprite(finalWay[0].point.views[finalWay[0].view].texture);
+
+            finalWay.RemoveAt(0);
+            //将当前选择的位置加入队列中
+            wayRecorder.Add(next);
+            if (wayRecorder.Count >= 3)
+            {
+                MoveThroughWay.instance.GetWayPointsBetween(wayRecorder[wayRecorder.Count - 2], next, wayRecorder[wayRecorder.Count - 3], next + new Vector3(19, 1, 671), lastAngel, nextAngel);
+            }
+            else if (wayRecorder.Count == 2)//此时只选了一个关键点
+            {
+                MoveThroughWay.instance.GetWayPointsBetween(wayRecorder[wayRecorder.Count - 2], next, wayRecorder[wayRecorder.Count - 2] - new Vector3(-20, 0, 20), next + new Vector3(19, 1, 671), lastAngel, nextAngel);
+            }
+
+        }
+    }
     private GameObject fatherForBag;
     private void ShowSprite(Texture2D texture)
     {
@@ -518,6 +570,8 @@ public class SampleThroughWay : MonoBehaviour
     private  GameObject navigationMap;
     private drawline dl;
     private GameObject cameraOnUI;//在UI上代表移动中的摄像机的圆点
+    //
+    //
     //根据3维世界的位置得到对应的UI位置
     private Vector2 GetUIPos(float x,float y)
     {
@@ -543,7 +597,7 @@ public class SampleThroughWay : MonoBehaviour
     }
     GameObject ShowUI(Vector2 pos)
     {
-        Debug.Log("hahah");
+        //Debug.Log("hahah");
         GameObject go = Instantiate(Resources.Load("SamplePoint")) as GameObject;
         go.transform.SetParent(GameObject.Find("SamplePoints").transform);
         go.GetComponent<RectTransform>().anchoredPosition = pos;

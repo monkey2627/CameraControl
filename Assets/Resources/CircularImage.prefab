@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4474521900585451157
+--- !u!1 &6934889989607294967
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,11 +8,11 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4474521900585451154}
-  - component: {fileID: 4474521900585451152}
-  - component: {fileID: 4474521900585451155}
-  - component: {fileID: 4474521900585451159}
-  - component: {fileID: 1842688340341173168}
+  - component: {fileID: 6934889989607294960}
+  - component: {fileID: 6934889989607294962}
+  - component: {fileID: 6934889989607294961}
+  - component: {fileID: 6934889989607294965}
+  - component: {fileID: 5167765181923021522}
   m_Layer: 5
   m_Name: CircularImage
   m_TagString: Untagged
@@ -20,14 +20,14 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &4474521900585451154
+--- !u!224 &6934889989607294960
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4474521900585451157}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_GameObject: {fileID: 6934889989607294967}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.07, y: 0.06846733, z: 0.158228}
   m_ConstrainProportionsScale: 1
@@ -37,24 +37,24 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 46.7, y: 476.5}
+  m_AnchoredPosition: {x: 200, y: 100.1}
   m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &4474521900585451152
+--- !u!222 &6934889989607294962
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4474521900585451157}
+  m_GameObject: {fileID: 6934889989607294967}
   m_CullTransparentMesh: 0
---- !u!114 &4474521900585451155
+--- !u!114 &6934889989607294961
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4474521900585451157}
+  m_GameObject: {fileID: 6934889989607294967}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5be22c808362b5e49883bacb051e124c, type: 3}
@@ -71,13 +71,13 @@ MonoBehaviour:
   m_Sprite: {fileID: 21300000, guid: 20aa90bd00f0dcc4d91f1a0c14ce12f0, type: 3}
   radius: 100
   segment: 30
---- !u!114 &4474521900585451159
+--- !u!114 &6934889989607294965
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4474521900585451157}
+  m_GameObject: {fileID: 6934889989607294967}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
@@ -88,9 +88,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 1842688340341173168}
-          m_TargetAssemblyTypeName: goToTargetPlace, Assembly-CSharp
-          m_MethodName: go
+        - m_Target: {fileID: 5167765181923021522}
+          m_TargetAssemblyTypeName: GoToTargetPlace, Assembly-CSharp
+          m_MethodName: Go
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -100,18 +100,18 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
---- !u!114 &1842688340341173168
+--- !u!114 &5167765181923021522
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4474521900585451157}
+  m_GameObject: {fileID: 6934889989607294967}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cc97daec1b4142c46858ff55c3f0b427, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  camera: {fileID: 0}
+  travelCamera: {fileID: 0}
   mapCamera: {fileID: 0}
   center: {fileID: 0}

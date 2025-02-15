@@ -51,16 +51,7 @@ public class ViewManager : MonoBehaviour
                 // screenShot.ReadPixels(new Rect(0, 0, screenWidth, screenHeight), 0, 0);
                 //现在这个texture上是截下来的内容
                 // screenShot.Apply();
-                Debug.Log("________");
-                Debug.Log(SampleThroughWay.instance.spbl.Count);
-                Debug.Log(SampleThroughWay.instance.spbl[0].spl.Count);
-                Debug.Log(SampleThroughWay.instance.spbl[0].spl[0].views.Count); 
-                Debug.Log(t.bunch);
-                Debug.Log(t.samplePoint);
-                Debug.Log(t.view);
-                Debug.Log(SampleThroughWay.instance.spbl.Count);
-                Debug.Log(SampleThroughWay.instance.spbl[t.bunch].spl.Count);
-                Debug.Log(SampleThroughWay.instance.spbl[t.bunch].spl[t.samplePoint].views.Count);
+               
                 Texture2D resize = ResizeTexture(SampleThroughWay.instance.spbl[t.bunch].spl[t.samplePoint].views[t.view].texture, singleWidth, singleHeight);
             //Sprite newS =  Sprite.Create(resize, new Rect(0, 0, resize.width, resize.height), new Vector2(0.5f, 0.5f));
             for (int z = 0; z < singleWidth; z++)

@@ -183,7 +183,7 @@ public class NetSystem : INetSystem
         }
         catch (SocketException se)
         {
-            Debug.Log("发送失败");
+            Debug.Log("发送失败" + se);
         }
     }       
     private void ReceiveCallBack(IAsyncResult iar)
@@ -205,7 +205,7 @@ public class NetSystem : INetSystem
         }
         catch (SocketException se)
         {
-            Debug.Log("接收失败");
+            Debug.Log("接收失败:"+se);
         }
     }
     private void HandleReceiveData(){

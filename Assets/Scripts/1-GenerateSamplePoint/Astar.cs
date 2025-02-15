@@ -89,7 +89,6 @@ public class Astar : MonoBehaviour
     {
         //类似广搜，每次把所有的水塘找到
         int label = 1;
-        int tt = 0;
         for (int x = 0; x < 100; x++)
         {
             for (int y = 0; y < 100; y++)
