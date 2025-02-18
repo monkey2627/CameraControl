@@ -17,7 +17,8 @@ public class Connect2Python : MonoBehaviour{
     public bool connected;    
     public List<string> responseList;
     public int responseListCount;
-    public GameObject voiceRecorder;
+    public TMPro.TMP_Text score;
+    public UnityEngine.UI.Image scoreImage;
     public static Connect2Python instance;
     private void Awake()
     {
@@ -117,12 +118,6 @@ public class Connect2Python : MonoBehaviour{
         HandleReceiveData();
     }
 
-    //点击send Message button会触发这个
-    public void sendMessageEnable(){
-        if (connected) {
-             //  vc.enableFrame();
-        }
-    } 
     /*void Update(){
       if (ifchangestate){
             sc.changeState(response);
@@ -143,25 +138,33 @@ public class Connect2Python : MonoBehaviour{
             }
         }
     }*/
+    //数据部分的长度4字节 +  2字节flag(0/1/2)代表仅文字，仅图片评分，图片+评分  + 0 文字内容/1 图片内容/2 （文字部分的长度2字节 + 文字内容 + 图片部分的长度4字节 + 图片内容） 
 
     private Queue<DataObject> writeQueue = new Queue<DataObject>();
-    private Byte[] getTextBytes(string text)
+    private Byte[] GetTextBytes(string text)//
     {
+
+        byte[] flagBytes = BitConverter.GetBytes(0);
+        if (!BitConverter.IsLittleEndian)
+        {
+            flagBytes.Reverse();
+        }
         //发送text,前面是标记
-        byte[] textBytes = Encoding.UTF8.GetBytes("text" + text);
-        Int16 length = (Int16)textBytes.Length;
-        byte[] lenthBytes = BitConverter.GetBytes(length);
-        Debug.Log(length);
+        byte[] textBytes = Encoding.UTF8.GetBytes(text);
+       
+
+        Int32 length = (Int32)textBytes.Length;
+        byte[] lenthBytes = BitConverter.GetBytes(length); 
         if (!BitConverter.IsLittleEndian)
         {
             lenthBytes.Reverse();
-        }
-        //总长度 + name 长度 +name+ 本体
+        }        
+
+        textBytes = flagBytes.Concat(textBytes).ToArray();
         byte[] sendBytes = lenthBytes.Concat(textBytes).ToArray();
-        //申请一个新的dataObject，此时其大小由发送的数据大小决定
         return sendBytes;
     }
-    private Byte[] getFrameBytes(string framePath)
+    private Byte[] GetFrameBytes(string framePath)
     {
         FileStream fs = new FileStream(framePath, FileMode.OpenOrCreate, FileAccess.Read);
         BinaryReader strread = new BinaryReader(fs);
@@ -177,13 +180,12 @@ public class Connect2Python : MonoBehaviour{
         
         Int32 length = (Int32)frameBytes.Length;
         byte[] lenthBytes = BitConverter.GetBytes(length);
-
-        frameBytes = flagBytes.Concat(frameBytes).ToArray();//,两字节不够，改成四季皆
- 
         if (!BitConverter.IsLittleEndian)
         {
             lenthBytes.Reverse();
         }
+
+        frameBytes = flagBytes.Concat(frameBytes).ToArray();//,两字节不够，改成四季皆
         //长度4字节(图片frame的长度) + 2字节flag + framebyte
         byte[] sendBytes = lenthBytes.Concat(frameBytes).ToArray();
         return sendBytes;
@@ -191,25 +193,86 @@ public class Connect2Python : MonoBehaviour{
     int num = 0;
     public void SendFrame()
     {
-        send("D:\\CameraControl\\Assets\\sampleViews\\"+num+".jpg", 1);
+        Send("D:\\CameraControl\\Assets\\sampleViews\\" + num + ".jpg", 1);
         num++;
     }
-    public void testSendFrame()
+    //数据部分的长度4字节 +  2字节flag(0/1/2)代表仅文字，仅图片评分，图片+评分  + 0 文字内容/1 图片内容/2 （文字部分的长度2字节 + 文字内容 + 图片部分的长度4字节 + 图片内容） 
+
+
+    public byte[] GetTextAndFrameByte()
     {
-      //  Debug.Log("send");
-        send("D:\\CameraControl\\Assets\\sampleViews\\9.jpg", 1);
+        //flag 2字
+        byte[] flagBytes = BitConverter.GetBytes(2);
+        if (!BitConverter.IsLittleEndian)
+        {
+            flagBytes.Reverse();
+        }
+        //图片长度+图片内容
+        byte[] frameBytes = ViewManager.GetByte(scoreImage.sprite);
+        //frame的长度 4字
+        Int32 framelength = (Int32)frameBytes.Length;
+        byte[] framelenthBytes = BitConverter.GetBytes(framelength);
+        if (!BitConverter.IsLittleEndian)
+        {
+            framelenthBytes.Reverse();
+        }
+        frameBytes = framelenthBytes.Concat(frameBytes).ToArray();
+
+
+
+        //text长度+ text内容
+        byte[] textBytes = Encoding.UTF8.GetBytes(score.text);
+        //text的长度 2字
+        Int16 textlength = (Int16)textBytes.Length;
+        byte[] textlenthBytes = BitConverter.GetBytes(textlength);
+        if (!BitConverter.IsLittleEndian)
+        {
+            textlenthBytes.Reverse();
+        }
+
+        textBytes = textlenthBytes.Concat(textBytes).ToArray();
+
+        byte[] allLengthBytes= BitConverter.GetBytes(textlength+2+framelength+4);
+        if (!BitConverter.IsLittleEndian)
+        {
+            allLengthBytes.Reverse();
+        }
+        //总数据长度4字节() + 2字节flag + 数据
+        byte[] sendBytes = allLengthBytes.Concat(flagBytes).ToArray().Concat(textBytes).ToArray().Concat(frameBytes).ToArray();
+        return sendBytes;
     }
-    public void send(string data,int mode)
+    public void Send()
+    {
+        //重载，仅用于用户给llm发送有评分的照片，改进llm评分标准
+        if (!connected) return;
+        byte[] sendBytes = new Byte[1024];
+        sendBytes = GetTextAndFrameByte();
+        //申请一个新的dataObject，此时其大小由发送的数据大小决定
+        DataObject newSend = new DataObject(sendBytes);
+        int count = 0;
+        //放到消息发送队列里
+        lock (writeQueue)
+        {
+            writeQueue.Enqueue(newSend);
+            count = writeQueue.Count;
+        }
+        if (count == 1)
+        {
+            stream.BeginWrite(newSend.bytes, newSend.readIndex, newSend.dataLength, SendCallBack, stream);
+        }
+
+    }
+    public void Send(string data,int mode)
     {   
         if (!connected) return;
         byte[] sendBytes = new Byte[1024];
         if(mode == 0){
-            sendBytes = getTextBytes(data);
+            sendBytes = GetTextBytes(data);
             Debug.Log("send to server: " + sendBytes.Length);
         }
         else if(mode == 1){
             //data 为 图片的路径
-            sendBytes = getFrameBytes(data);
+            sendBytes = GetFrameBytes(data);
             Debug.Log("send  to server: " + sendBytes.Length);
         }
         //申请一个新的dataObject，此时其大小由发送的数据大小决定

@@ -7,6 +7,8 @@ using UnityEngine;
 public class Manager : MonoBehaviour
 {
 
+    public bool needSample = false;
+    public bool needConnection = false;
     public float sampleFilterScore = 0.5f;
     void Start()
     {
@@ -16,15 +18,18 @@ public class Manager : MonoBehaviour
      
         Debug.Log("Finish Init");
         //先与python端连接
-        // connect.Connect2server();
-
-        //在用户行动之前，预打好所有pos + view 的评分
-        SampleThroughWay.instance.GetMap();//初始化地图，在整个界面上画格子,得到Map[Point]
-        SampleThroughWay.instance.GenerateSampleCenters();//得到所有的采样中心点
-        Debug.Log("GetAllSampleCenters");
-        SampleThroughWay.instance.StartGetSamplePointsThroughWay();//根据采样中心点采样 pos + view 并评分
-        SampleThroughWay.instance.FilterSamplePoint(sampleFilterScore);//删除特别不好的采样点和采样视角，不参与后期的路径生成
-        Debug.Log("FinishFilter");
+        if(needConnection)
+             Connect2Python.instance.Connect2server();
+        if (needSample)
+        {
+            //在用户行动之前，预打好所有pos + view 的评分
+            SampleThroughWay.instance.GetMap();//初始化地图，在整个界面上画格子,得到Map[Point]
+            SampleThroughWay.instance.GenerateSampleCenters();//得到所有的采样中心点
+            Debug.Log("GetAllSampleCenters");
+            SampleThroughWay.instance.StartGetSamplePointsThroughWay();//根据采样中心点采样 pos + view 并评分
+            SampleThroughWay.instance.FilterSamplePoint(sampleFilterScore);//删除特别不好的采样点和采样视角，不参与后期的路径生成
+            Debug.Log("FinishFilter");
+        }
         //准备接收用户反馈，开始语音监听
         //Voice.instance.StartRecord();
 

@@ -95,7 +95,7 @@ public class Astar : MonoBehaviour
             { 
                 if(map[x,y].isValid && map[x,y].label == -1 && !map[x,y].isObstacle)
                 {
-                    tt = 0;
+                   
                    // Debug.Log(x + "_" + y);
                     //นใหั
                      Point start = map[x,y];

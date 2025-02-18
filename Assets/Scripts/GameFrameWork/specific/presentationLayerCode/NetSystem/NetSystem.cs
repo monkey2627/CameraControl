@@ -108,6 +108,7 @@ public class NetSystem : INetSystem
         }
         catch (SocketException se)
         {
+            Debug.Log(se);
             this.SendEvent<OnConnectFailEvent>();
         }
     }

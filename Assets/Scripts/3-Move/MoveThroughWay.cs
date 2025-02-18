@@ -7,7 +7,7 @@ public class MoveThroughWay : MonoBehaviour
     // Start is called before the first frame update
     public List<RotationAndPosition> toGo = new();
     public int count = 0;
-    private float speed = 100f;
+    private float speed = 20f;
     public static MoveThroughWay instance;
     int number;
     private void Awake()
@@ -18,7 +18,7 @@ public class MoveThroughWay : MonoBehaviour
     {   
        
     }
-    public void GetWayPointsBetween(Vector3 p1,Vector3 p2,Vector3 before,Vector3 next,Quaternion begin,Quaternion end)
+    public void GetWayPointsBetween(Vector3 p1,Vector3 p2,Vector3 before,Vector3 next,Vector3 begin,Vector3 end)
     {
         //要根据距离来调整平滑点的数量,300m对应200比较好
         // number = (int)(p2 - p1).magnitude * 2 / 4;
@@ -31,7 +31,7 @@ public class MoveThroughWay : MonoBehaviour
             go.transform.localScale = new Vector3(10,10,10);
             go.transform.position = CatmullRom(before, p1, p2, next, i * (1f /( (float)number) * 1.0f));
             //插值旋转角度和位置
-            toGo.Add(new RotationAndPosition(Quaternion.Slerp(begin,end, i * (1f / ((float)number) * 1.0f)), go.transform.position));
+            toGo.Add(new RotationAndPosition(Quaternion.Slerp(Quaternion.Euler(begin),Quaternion.Euler(end), i * (1f / ((float)number) * 1.0f)), go.transform.position));
             SampleThroughWay.instance.DrawRect(go.transform.position.x, go.transform.position.z);
         }
        
@@ -47,23 +47,28 @@ public class MoveThroughWay : MonoBehaviour
     }
     // Update is called once per frame
     private float t = 0;
+    private int rot = 0;
     //思考一下如何平滑角度
     void Update()
     {
+        Vector3 qSpeed;
         float s = GetSpeed() * Time.deltaTime;//这一帧该走的路程
-       
         
         if (toGo.Count > 0)//需要继续往前走
         {   
             t += s;
             //下一个应该到的位置
             Vector3 next =  toGo[0].pos;
+            Vector3 nextq = toGo[0].quaternion.eulerAngles;
+            //不停算转动的速度
+            qSpeed = (nextq - SampleThroughWay.instance.mainCamera.transform.eulerAngles) / ((next - SampleThroughWay.instance.mainCamera.transform.position).magnitude / GetSpeed());
             //在摄像机移动时，动态更新中心位置，
             //samplePointsGenerater.SetCenterAndSampling(target);
             float gap = (next - SampleThroughWay.instance.mainCamera.transform.position).magnitude;
             if( t > gap)
             {
                 SampleThroughWay.instance.mainCamera.transform.position += (next - SampleThroughWay.instance.mainCamera.transform.position).normalized * s;
+                SampleThroughWay.instance.mainCamera.transform.eulerAngles = nextq ;
                 SampleThroughWay.instance.CameraUIFollow();
                 toGo.RemoveAt(0);
                 t -= gap;
@@ -78,6 +83,7 @@ public class MoveThroughWay : MonoBehaviour
             {
                 //朝着目标方向走
                 SampleThroughWay.instance. mainCamera.transform.position += (next - SampleThroughWay.instance.mainCamera.transform.position).normalized * s;
+                SampleThroughWay.instance.mainCamera.transform.eulerAngles += qSpeed * Time.deltaTime;
                 SampleThroughWay.instance.CameraUIFollow();
             }
            

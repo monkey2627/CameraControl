@@ -224,7 +224,7 @@ public class SampleThroughWay : MonoBehaviour
         }
     }
 #region 初始化完成后开始生成路径
-    public Quaternion lastAngel;//记录上一个相机的位姿
+    public Vector3 lastAngel;//记录上一个相机的位姿
     private List<Vector3> wayRecorder = new(); //记录选择过的key路径，为了曲线生成
     public void Add2WayRecorder(Vector3 v)
     {
@@ -357,6 +357,11 @@ public class SampleThroughWay : MonoBehaviour
                 }
                 Debug.Log(maxSamplePoint);
                 Debug.Log(bunch.spl.Count);
+                if(bunch.spl.Count == 0)
+                {
+                    bunch.valid = false;
+                    return;
+                }
                 Debug.Log(maxView);
                 var point = bunch.spl[maxSamplePoint];
                 point.passed = true;
@@ -378,7 +383,7 @@ public class SampleThroughWay : MonoBehaviour
            
             MoveThroughWay.instance.count = 0;
             Vector3 next = finalWay[0].point.pos;
-            Quaternion nextAngel = finalWay[0].quaternion;
+            Vector3 nextAngel = finalWay[0].quaternion.eulerAngles;
             finalWay[0].point.label.GetComponent<CustomUI.CircularImage>().color = Color.blue;
 
             ShowSprite(finalWay[0].point.views[finalWay[0].view].texture);
@@ -406,7 +411,7 @@ public class SampleThroughWay : MonoBehaviour
             Debug.Log(finalWay.Count);
             Vector3 next = finalWay[0].point.pos;
             MoveThroughWay.instance.count = 0;
-            Quaternion nextAngel = finalWay[0].quaternion;
+            Vector3 nextAngel = finalWay[0].quaternion.eulerAngles;
             finalWay[0].point.label.GetComponent<CustomUI.CircularImage>().color = Color.blue;
 
             ShowSprite(finalWay[0].point.views[finalWay[0].view].texture);

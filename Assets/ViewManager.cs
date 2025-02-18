@@ -132,7 +132,7 @@ public class ViewManager : MonoBehaviour
             //Sprite.Create(screenShot, new Rect(0, 0, screenShot.width, screenShot.height), new Vector2(0.5f, 0.5f));
 
     }
-    static public Sprite TextureToSprite(Texture2D texture2D)
+    public static  Sprite TextureToSprite(Texture2D texture2D)
     {
         return Sprite.Create(texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
     }
@@ -143,18 +143,15 @@ public class ViewManager : MonoBehaviour
         texture2D.LoadImage(ImgByte);
 
         return Sprite.Create(texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
-
-        //finalFrameImage.sprite = sprite;
-
     }
-    //返回字节数组
-    static private byte[] ReturnImgByte(string UIPath)
+
+    public static byte[] GetByte(Sprite sp)
     {
-        FileStream fs = new FileStream(UIPath, FileMode.Open);
-
-        byte[] imgByte = new byte[fs.Length];
-        fs.Read(imgByte, 0, imgByte.Length);
-        fs.Close();
-        return imgByte;
+        //转换成Texture
+        Texture2D temp = sp.texture;
+        //在转换成bytes
+        byte[] photoByte = temp.EncodeToPNG();
+        return photoByte;
     }
+
 }

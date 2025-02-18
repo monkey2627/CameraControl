@@ -36,7 +36,7 @@ public class GoToTargetPlace : MonoBehaviour
         //将起始点作为路径的第一个关键点
         SampleThroughWay.instance.Add2WayRecorder(travelCamera.transform.position);
         //设置初始的角度
-        SampleThroughWay.instance.lastAngel = travelCamera.transform.rotation;
+        SampleThroughWay.instance.lastAngel = travelCamera.transform.eulerAngles;
         //设置相机的位置为起始点，生成路径
         SampleThroughWay.instance.GenerateWay();
 
