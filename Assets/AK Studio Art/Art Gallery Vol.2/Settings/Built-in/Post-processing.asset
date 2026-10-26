@@ -97,10 +97,10 @@ MonoBehaviour:
     value: 0
   postExposure:
     overrideState: 1
-    value: 2
+    value: 2.4
   contrast:
     overrideState: 1
-    value: 10
+    value: 15
   mixerRedOutRedIn:
     overrideState: 0
     value: 100
@@ -1413,7 +1413,7 @@ MonoBehaviour:
     value: 100
   distanceFade:
     overrideState: 1
-    value: 0.5
+    value: 0
   vignette:
     overrideState: 1
     value: 0
@@ -1435,7 +1435,7 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 0.44
+    value: 2.34
   threshold:
     overrideState: 1
     value: 1
@@ -1566,7 +1566,7 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 0.1
+    value: 0.16
   color:
     overrideState: 1
     value: {r: 0, g: 0, b: 0, a: 1}
@@ -1584,7 +1584,7 @@ MonoBehaviour:
     value: -12
   thicknessModifier:
     overrideState: 1
-    value: 1
+    value: 3.16
   directLightingStrength:
     overrideState: 0
     value: 0

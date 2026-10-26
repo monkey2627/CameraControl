@@ -95,12 +95,27 @@ public class Connect2Python : MonoBehaviour{
         readDataObject.CheckAndMoveBytes();
         Debug.Log("      收到消息:" +test +"   " + response);
         test = test + 1;
-        if(flag == 0)
+        if(flag == 1)
         {
             float[] ans = new float[SampleThroughWay.instance.sampleSolveSize * SampleThroughWay.instance.sampleSolveSize];
             //将response的内容一个个填入ans数组中
-
-            //
+            for(int i = 0; i < response.Length; i++)
+            {
+                if(response[i] == '%')
+                {
+                    int last = i + 1;
+                    int now = 0;
+                    for(int j = i + 1; j < response.Length; j++)
+                    {
+                        if(response[j]== ',')
+                        {
+                            ans[now++] = int.Parse(response.Substring(last,j-last));
+                            last = j + 1;
+                        }
+                    }
+                }
+            }
+            //遇到哪个，就会加入forscore，然后先入先出
             if (SampleThroughWay.instance!=null && SampleThroughWay.instance.forScore.Count > 0)
             {
                 int i = 0;
@@ -117,7 +132,6 @@ public class Connect2Python : MonoBehaviour{
         //再次调用，解决粘包问题
         HandleReceiveData();
     }
-
     /*void Update(){
       if (ifchangestate){
             sc.changeState(response);
@@ -339,28 +353,9 @@ public class Connect2Python : MonoBehaviour{
 
 
 
-    private string[] statemMark = {"","<info>","<info>","<ppt>","<bb>","","" };
-
-
 
     private byte[] fssize;
-    void SendFrameMessage(){
 
-       /* sendMessage = false;
-        imageName = "/final_frame4" + videoController.picture_num.ToString() + ".jpg"; 
-        Debug.Log("send imag:"+ imageName);
-        videoController.picture_num++;
-        FileStream fs = new FileStream(imageFolder+imageName, FileMode.OpenOrCreate, FileAccess.Read);
-        fssize = new byte[fs.Length];
-        BinaryReader strread = new BinaryReader(fs);
-        //读取文件内容并保存在字节数组中
-        strread.Read(fssize, 0, fssize.Length);*/
-       // fssize = vc.bytes;
-        Debug.Log(fssize.Length);
-        stream.Write(fssize, 0, fssize.Length);
-       
-
-    }
     void OnDestroy()
     {
         Debug.Log("CLOSE BY CLIENT");
